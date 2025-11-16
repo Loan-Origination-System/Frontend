@@ -13,6 +13,8 @@ import { Percent, Calendar } from "lucide-react"
 import DocumentPopup from "@/components/DocumentPopup"
 import { PersonalDetailsForm } from "@/components/PersonalDetail"
 import { CoBorrowerDetailsForm } from "@/components/CoBorrowerDetail"
+import { SecurityDetailsForm } from "@/components/SecurityDetail"
+import { RepaymentSourceForm } from "@/components/RepaymentSource"
 
 const steps = [
   "Loan Details",
@@ -47,6 +49,24 @@ export default function LoanApplicationPage() {
 
   const handleCoBorrowerDetailsBack = () => {
     setCurrentStep(1) // Go back to Personal Details step
+  }
+
+  const handleSecurityDetailsNext = (data: any) => {
+    setFormData({ ...formData, ...data })
+    setCurrentStep(4) // Move to Repayment Source step
+  }
+
+  const handleSecurityDetailsBack = () => {
+    setCurrentStep(2) // Go back to Co-Borrower Details step
+  }
+
+  const handleRepaymentSourceNext = (data: any) => {
+    setFormData({ ...formData, ...data })
+    setCurrentStep(5) // Move to Confirmation step
+  }
+
+  const handleRepaymentSourceBack = () => {
+    setCurrentStep(3) // Go back to Security Details step
   }
 
   const calculateEMI = () => {
@@ -113,6 +133,22 @@ export default function LoanApplicationPage() {
             <CoBorrowerDetailsForm
               onNext={handleCoBorrowerDetailsNext}
               onBack={handleCoBorrowerDetailsBack}
+              formData={formData}
+            />
+          </div>
+        ) : currentStep === 3 ? (
+          <div className="max-w-7xl mx-auto">
+            <SecurityDetailsForm
+              onNext={handleSecurityDetailsNext}
+              onBack={handleSecurityDetailsBack}
+              formData={formData}
+            />
+          </div>
+        ) : currentStep === 4 ? (
+          <div className="max-w-7xl mx-auto">
+            <RepaymentSourceForm
+              onNext={handleRepaymentSourceNext}
+              onBack={handleRepaymentSourceBack}
               formData={formData}
             />
           </div>
@@ -312,7 +348,7 @@ export default function LoanApplicationPage() {
         )}
 
         {/* Navigation Buttons */}
-        {currentStep !== 1 && currentStep !== 2 && (
+        {currentStep !== 1 && currentStep !== 2 && currentStep !== 3 && currentStep !== 4 && (
         <div className="flex justify-center gap-4 mt-8">
           <Button
             variant="secondary"

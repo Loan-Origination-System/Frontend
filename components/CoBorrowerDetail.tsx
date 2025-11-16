@@ -17,10 +17,26 @@ interface CoBorrowerDetailsFormProps {
 
 export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDetailsFormProps) {
   const [data, setData] = useState(formData.coBorrowerDetails || {})
+  const [coBorrowers, setCoBorrowers] = useState<any[]>(formData.coBorrowers || [{}])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onNext({ coBorrowerDetails: data })
+    onNext({ coBorrowerDetails: data, coBorrowers })
+  }
+
+  const addCoBorrower = () => {
+    setCoBorrowers([...coBorrowers, {}])
+  }
+
+  const removeCoBorrower = (index: number) => {
+    const updatedCoBorrowers = coBorrowers.filter((_, i) => i !== index)
+    setCoBorrowers(updatedCoBorrowers)
+  }
+
+  const updateCoBorrower = (index: number, field: string, value: any) => {
+    const updatedCoBorrowers = [...coBorrowers]
+    updatedCoBorrowers[index] = { ...updatedCoBorrowers[index], [field]: value }
+    setCoBorrowers(updatedCoBorrowers)
   }
 
   return (
@@ -404,6 +420,113 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
         </div>
       </div>
 
+      {/* PEP Declaration */}
+      <div className="bg-card border rounded-lg p-6 space-y-6">
+        <h2 className="text-xl font-semibold">PEP Declaration</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="co-pepPerson">Politically Exposed Person*</Label>
+            <Select value={data.pepPerson} onValueChange={(value) => setData({ ...data, pepPerson: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="[Select]" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="yes">Yes</SelectItem>
+                <SelectItem value="no">No</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="co-pepSubCategory">PEP Sub Category*</Label>
+            <Input
+              id="co-pepSubCategory"
+              placeholder="Enter Sub Category"
+              value={data.pepSubCategory || ""}
+              onChange={(e) => setData({ ...data, pepSubCategory: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="co-pepRelated">Is he/she related to any PEP?*</Label>
+            <Select value={data.pepRelated} onValueChange={(value) => setData({ ...data, pepRelated: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="[Select]" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="yes">Yes</SelectItem>
+                <SelectItem value="no">No</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="co-pepRelationship">Relationship*</Label>
+            <Select
+              value={data.pepRelationship}
+              onValueChange={(value) => setData({ ...data, pepRelationship: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="[Select]" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="spouse">Spouse</SelectItem>
+                <SelectItem value="parent">Parent</SelectItem>
+                <SelectItem value="sibling">Sibling</SelectItem>
+                <SelectItem value="child">Child</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="co-pepIdentification">
+              Identification No. <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="co-pepIdentification"
+              placeholder="Enter Identification No"
+              value={data.pepIdentification || ""}
+              onChange={(e) => setData({ ...data, pepIdentification: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="co-pepCategory">PEP Category*</Label>
+            <Input
+              id="co-pepCategory"
+              placeholder="Enter Category"
+              value={data.pepCategory || ""}
+              onChange={(e) => setData({ ...data, pepCategory: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="co-pepSubCat2">PEP Sub Category*</Label>
+            <Input
+              id="co-pepSubCat2"
+              placeholder="Enter Sub Category"
+              value={data.pepSubCat2 || ""}
+              onChange={(e) => setData({ ...data, pepSubCat2: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="co-uploadId">
+            Upload Identification Proof <span className="text-destructive">*</span>
+          </Label>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" className="w-28 bg-transparent">
+              Choose File
+            </Button>
+            <span className="text-sm text-muted-foreground">No file chosen</span>
+          </div>
+        </div>
+      </div>
+
       {/* Employment Status */}
       <div className="bg-card border rounded-lg p-6 space-y-6">
         <div className="space-y-4">
@@ -501,6 +624,185 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
           </div>
         </div>
       )}
+
+      {/* Additional Co-Borrowers */}
+      {coBorrowers.length > 1 && coBorrowers.slice(1).map((coBorrower, index) => {
+        const actualIndex = index + 1
+        return (
+          <div key={actualIndex} className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Additional Co-Borrower {actualIndex}</h2>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => removeCoBorrower(actualIndex)}
+              >
+                Remove
+              </Button>
+            </div>
+
+            {/* Co-Borrower Personal Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Personal Information</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>Salutation <span className="text-destructive">*</span></Label>
+                  <Select
+                    value={coBorrower.salutation}
+                    onValueChange={(value) => updateCoBorrower(actualIndex, "salutation", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="[Select]" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mr">Mr.</SelectItem>
+                      <SelectItem value="mrs">Mrs.</SelectItem>
+                      <SelectItem value="ms">Ms.</SelectItem>
+                      <SelectItem value="dr">Dr.</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Co-Borrower Name <span className="text-destructive">*</span></Label>
+                  <Input
+                    placeholder="Enter Full Name"
+                    value={coBorrower.name || ""}
+                    onChange={(e) => updateCoBorrower(actualIndex, "name", e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Nationality <span className="text-destructive">*</span></Label>
+                  <Select
+                    value={coBorrower.nationality}
+                    onValueChange={(value) => updateCoBorrower(actualIndex, "nationality", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="[Select]" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bhutanese">Bhutanese</SelectItem>
+                      <SelectItem value="indian">Indian</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Identification Type <span className="text-destructive">*</span></Label>
+                  <Select
+                    value={coBorrower.identificationType}
+                    onValueChange={(value) => updateCoBorrower(actualIndex, "identificationType", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="[Select]" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cid">Citizenship ID</SelectItem>
+                      <SelectItem value="passport">Passport</SelectItem>
+                      <SelectItem value="work_permit">Work Permit</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>Identification No. <span className="text-destructive">*</span></Label>
+                  <Input
+                    placeholder="Enter identification No"
+                    value={coBorrower.identificationNo || ""}
+                    onChange={(e) => updateCoBorrower(actualIndex, "identificationNo", e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Date of Birth <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="date"
+                    value={coBorrower.dateOfBirth || ""}
+                    onChange={(e) => updateCoBorrower(actualIndex, "dateOfBirth", e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Email Address <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="email"
+                    placeholder="Enter Email"
+                    value={coBorrower.email || ""}
+                    onChange={(e) => updateCoBorrower(actualIndex, "email", e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Contact Number <span className="text-destructive">*</span></Label>
+                  <Input
+                    placeholder="Enter Contact No"
+                    value={coBorrower.contact || ""}
+                    onChange={(e) => updateCoBorrower(actualIndex, "contact", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Relationship to Borrower <span className="text-destructive">*</span></Label>
+                  <Select
+                    value={coBorrower.relationship}
+                    onValueChange={(value) => updateCoBorrower(actualIndex, "relationship", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="[Select]" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="spouse">Spouse</SelectItem>
+                      <SelectItem value="parent">Parent</SelectItem>
+                      <SelectItem value="sibling">Sibling</SelectItem>
+                      <SelectItem value="child">Child</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Annual Income (Nu.) <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="number"
+                    placeholder="Enter Annual Income"
+                    value={coBorrower.annualIncome || ""}
+                    onChange={(e) => updateCoBorrower(actualIndex, "annualIncome", e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Occupation</Label>
+                  <Input
+                    placeholder="Enter Occupation"
+                    value={coBorrower.occupation || ""}
+                    onChange={(e) => updateCoBorrower(actualIndex, "occupation", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })}
+
+      {/* Add Co-Borrower Button */}
+      <div className="flex justify-center">
+        <Button
+          type="button"
+          size="lg"
+          onClick={addCoBorrower}
+          className="bg-[#003DA5] hover:bg-[#002D7A] text-white px-8"
+        >
+          + Add Another Co-Borrower
+        </Button>
+      </div>
 
       <div className="flex justify-between gap-4">
         <Button type="button" onClick={onBack} variant="secondary" size="lg" className="min-w-32">

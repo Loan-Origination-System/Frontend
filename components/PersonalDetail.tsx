@@ -2,12 +2,13 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { fetchMaritalStatus, fetchBanks, fetchNationality, fetchIdentificationType, fetchCountry, fetchDzongkhag, fetchGewogsByDzongkhag } from "@/services/api"
 
 interface PersonalDetailsFormProps {
   onNext: (data: any) => void
@@ -18,6 +19,160 @@ interface PersonalDetailsFormProps {
 
 export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetailsFormProps) {
   const [data, setData] = useState(formData.personalDetails || {})
+  const [maritalStatusOptions, setMaritalStatusOptions] = useState<any[]>([])
+  const [banksOptions, setBanksOptions] = useState<any[]>([])
+  const [nationalityOptions, setNationalityOptions] = useState<any[]>([])
+  const [identificationTypeOptions, setIdentificationTypeOptions] = useState<any[]>([])
+  const [countryOptions, setCountryOptions] = useState<any[]>([])
+  const [dzongkhagOptions, setDzongkhagOptions] = useState<any[]>([])
+  const [permGewogOptions, setPermGewogOptions] = useState<any[]>([])
+  const [currGewogOptions, setCurrGewogOptions] = useState<any[]>([])
+
+  useEffect(() => {
+    // Fetch marital status options from API
+    const loadMaritalStatus = async () => {
+      try {
+        const options = await fetchMaritalStatus()
+        setMaritalStatusOptions(options)
+      } catch (error) {
+        console.error('Failed to load marital status:', error)
+        // Fallback to default options
+        setMaritalStatusOptions([
+          { id: 'single', name: 'Single' },
+          { id: 'married', name: 'Married' },
+          { id: 'divorced', name: 'Divorced' },
+          { id: 'widowed', name: 'Widowed' }
+        ])
+      }
+    }
+
+    loadMaritalStatus()
+
+    // Fetch banks from API
+    const loadBanks = async () => {
+      try {
+        const options = await fetchBanks()
+        setBanksOptions(options)
+      } catch (error) {
+        console.error('Failed to load banks:', error)
+        // Fallback to default options
+        setBanksOptions([
+          { id: 'bob', name: 'Bank of Bhutan' },
+          { id: 'bnb', name: 'Bhutan National Bank' },
+          { id: 'dpnb', name: 'Druk PNB Bank' },
+          { id: 'tbank', name: 'T Bank' }
+        ])
+      }
+    }
+
+    loadBanks()
+
+    // Fetch nationality from API
+    const loadNationality = async () => {
+      try {
+        const options = await fetchNationality()
+        setNationalityOptions(options)
+      } catch (error) {
+        console.error('Failed to load nationality:', error)
+        // Fallback to default options
+        setNationalityOptions([
+          { id: 'bhutanese', name: 'Bhutanese' },
+          { id: 'indian', name: 'Indian' },
+          { id: 'other', name: 'Other' }
+        ])
+      }
+    }
+
+    loadNationality()
+
+    // Fetch identification type from API
+    const loadIdentificationType = async () => {
+      try {
+        const options = await fetchIdentificationType()
+        setIdentificationTypeOptions(options)
+      } catch (error) {
+        console.error('Failed to load identification type:', error)
+        setIdentificationTypeOptions([
+          { id: 'cid', name: 'Citizenship ID' },
+          { id: 'passport', name: 'Passport' },
+          { id: 'work_permit', name: 'Work Permit' }
+        ])
+      }
+    }
+
+    loadIdentificationType()
+
+    // Fetch country from API
+    const loadCountry = async () => {
+      try {
+        const options = await fetchCountry()
+        setCountryOptions(options)
+      } catch (error) {
+        console.error('Failed to load country:', error)
+        setCountryOptions([
+          { id: 'bhutan', name: 'Bhutan' },
+          { id: 'india', name: 'India' }
+        ])
+      }
+    }
+
+    loadCountry()
+
+    // Fetch dzongkhag from API
+    const loadDzongkhag = async () => {
+      try {
+        const options = await fetchDzongkhag()
+        setDzongkhagOptions(options)
+      } catch (error) {
+        console.error('Failed to load dzongkhag:', error)
+        setDzongkhagOptions([
+          { id: 'thimphu', name: 'Thimphu' },
+          { id: 'paro', name: 'Paro' },
+          { id: 'punakha', name: 'Punakha' }
+        ])
+      }
+    }
+
+    loadDzongkhag()
+  }, [])
+
+  // Load permanent gewogs when permanent dzongkhag changes
+  useEffect(() => {
+    const loadPermGewogs = async () => {
+      if (data.permDzongkhag) {
+        try {
+          const options = await fetchGewogsByDzongkhag(data.permDzongkhag)
+          setPermGewogOptions(options)
+        } catch (error) {
+          console.error('Failed to load permanent gewogs:', error)
+          setPermGewogOptions([])
+        }
+      }
+    }
+    loadPermGewogs()
+  }, [data.permDzongkhag])
+
+  // Load current gewogs when current dzongkhag changes
+  useEffect(() => {
+    const loadCurrGewogs = async () => {
+      if (data.currDzongkhag) {
+        try {
+          const options = await fetchGewogsByDzongkhag(data.currDzongkhag)
+          setCurrGewogOptions(options)
+        } catch (error) {
+          console.error('Failed to load current gewogs:', error)
+          setCurrGewogOptions([])
+        }
+      }
+    }
+    loadCurrGewogs()
+  }, [data.currDzongkhag])
+
+  const handleFileChange = (fieldName: string, file: File | null) => {
+    if (file) {
+      setData({ ...data, [fieldName]: file.name })
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,9 +225,21 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="bhutanese">Bhutanese</SelectItem>
-                <SelectItem value="indian">Indian</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                {nationalityOptions.length > 0 ? (
+                  nationalityOptions.map((option, index) => {
+                    const key = option.nationality_pk_code || option.id || option.code || `nationality-${index}`
+                    const value = String(option.nationality_pk_code || option.id || option.code || index)
+                    const label = option.nationality || option.name || option.label || 'Unknown'
+                    
+                    return (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -89,9 +256,21 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cid">Citizenship ID</SelectItem>
-                <SelectItem value="passport">Passport</SelectItem>
-                <SelectItem value="work_permit">Work Permit</SelectItem>
+                {identificationTypeOptions.length > 0 ? (
+                  identificationTypeOptions.map((option, index) => {
+                    const key = option.identity_type_pk_code || option.identification_type_pk_code || option.id || `id-${index}`
+                    const value = String(option.identity_type_pk_code || option.identification_type_pk_code || option.id || index)
+                    const label = option.identity_type || option.identification_type || option.name || 'Unknown'
+                    
+                    return (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -174,10 +353,21 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="single">Single</SelectItem>
-                <SelectItem value="married">Married</SelectItem>
-                <SelectItem value="divorced">Divorced</SelectItem>
-                <SelectItem value="widowed">Widowed</SelectItem>
+                {maritalStatusOptions.length > 0 ? (
+                  maritalStatusOptions.map((option, index) => {
+                    const key = option.marital_status_pk_code || option.id || option.value || option.code || `marital-${index}`
+                    const value = String(option.marital_status_pk_code || option.id || option.value || option.code || index)
+                    const label = option.marital_status || option.name || option.label || option.description || option.value || 'Unknown'
+                    
+                    return (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -241,10 +431,25 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               Upload Family Tree <span className="text-destructive">*</span>
             </Label>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" className="w-28 bg-transparent">
+              <input
+                type="file"
+                id="uploadFamilyTree"
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => handleFileChange('familyTree', e.target.files?.[0] || null)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-28 bg-transparent"
+                onClick={() => document.getElementById('uploadFamilyTree')?.click()}
+              >
                 Choose File
               </Button>
-              <span className="text-sm text-muted-foreground">No file chosen</span>
+              <span className="text-sm text-muted-foreground">
+                {data.familyTree || 'No file chosen'}
+              </span>
             </div>
           </div>
         </div>
@@ -271,10 +476,22 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="bob">Bank of Bhutan</SelectItem>
-                <SelectItem value="bnb">Bhutan National Bank</SelectItem>
-                <SelectItem value="dpnb">Druk PNB Bank</SelectItem>
-                <SelectItem value="tbank">T Bank</SelectItem>
+                {banksOptions.length > 0 ? (
+                  banksOptions.map((option, index) => {
+                    console.log('Bank option:', option)
+                    const key = option.bank_pk_code || option.id || option.code || option.bank_code || `bank-${index}`
+                    const value = String(option.bank_pk_code || option.id || option.code || option.bank_code || index)
+                    const label = option.bank_name || option.name || option.label || option.bankName || option.bank || 'Unknown'
+                    
+                    return (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -285,10 +502,25 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
             Upload Passport-size Photograph <span className="text-destructive">*</span>
           </Label>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="sm" className="w-28 bg-transparent">
+            <input
+              type="file"
+              id="uploadPassport"
+              className="hidden"
+              accept=".jpg,.jpeg,.png"
+              onChange={(e) => handleFileChange('passportPhoto', e.target.files?.[0] || null)}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-28 bg-transparent"
+              onClick={() => document.getElementById('uploadPassport')?.click()}
+            >
               Choose File
             </Button>
-            <span className="text-sm text-muted-foreground">No file chosen</span>
+            <span className="text-sm text-muted-foreground">
+              {data.passportPhoto || 'No file chosen'}
+            </span>
           </div>
         </div>
       </div>
@@ -307,8 +539,21 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="bhutan">Bhutan</SelectItem>
-                <SelectItem value="india">India</SelectItem>
+                {countryOptions.length > 0 ? (
+                  countryOptions.map((option, index) => {
+                    const key = option.country_pk_code || option.id || option.code || `perm-country-${index}`
+                    const value = String(option.country_pk_code || option.id || option.code || index)
+                    const label = option.country || option.name || option.label || 'Unknown'
+                    
+                    return (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -322,9 +567,21 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="thimphu">Thimphu</SelectItem>
-                <SelectItem value="paro">Paro</SelectItem>
-                <SelectItem value="punakha">Punakha</SelectItem>
+                {dzongkhagOptions.length > 0 ? (
+                  dzongkhagOptions.map((option, index) => {
+                    const key = option.dzongkhag_pk_code || option.id || option.code || `perm-dzo-${index}`
+                    const value = String(option.dzongkhag_pk_code || option.id || option.code || index)
+                    const label = option.dzongkhag || option.name || option.label || 'Unknown'
+                    
+                    return (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -338,8 +595,21 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gewog1">Gewog 1</SelectItem>
-                <SelectItem value="gewog2">Gewog 2</SelectItem>
+                {permGewogOptions.length > 0 ? (
+                  permGewogOptions.map((option, index) => {
+                    const key = option.gewog_pk_code || option.id || option.code || `perm-gewog-${index}`
+                    const value = String(option.gewog_pk_code || option.id || option.code || index)
+                    const label = option.gewog || option.name || option.label || 'Unknown'
+                    
+                    return (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="loading" disabled>{data.permDzongkhag ? 'Loading...' : 'Select Dzongkhag first'}</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -398,8 +668,21 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="bhutan">Bhutan</SelectItem>
-                <SelectItem value="india">India</SelectItem>
+                {countryOptions.length > 0 ? (
+                  countryOptions.map((option, index) => {
+                    const key = option.country_pk_code || option.id || option.code || `curr-country-${index}`
+                    const value = String(option.country_pk_code || option.id || option.code || index)
+                    const label = option.country || option.name || option.label || 'Unknown'
+                    
+                    return (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -413,8 +696,21 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="thimphu">Thimphu</SelectItem>
-                <SelectItem value="paro">Paro</SelectItem>
+                {dzongkhagOptions.length > 0 ? (
+                  dzongkhagOptions.map((option, index) => {
+                    const key = option.dzongkhag_pk_code || option.id || option.code || `curr-dzo-${index}`
+                    const value = String(option.dzongkhag_pk_code || option.id || option.code || index)
+                    const label = option.dzongkhag || option.name || option.label || 'Unknown'
+                    
+                    return (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -428,8 +724,21 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gewog1">Gewog 1</SelectItem>
-                <SelectItem value="gewog2">Gewog 2</SelectItem>
+                {currGewogOptions.length > 0 ? (
+                  currGewogOptions.map((option, index) => {
+                    const key = option.gewog_pk_code || option.id || option.code || `curr-gewog-${index}`
+                    const value = String(option.gewog_pk_code || option.id || option.code || index)
+                    const label = option.gewog || option.name || option.label || 'Unknown'
+                    
+                    return (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="loading" disabled>{data.currDzongkhag ? 'Loading...' : 'Select Dzongkhag first'}</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -597,10 +906,25 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
             Upload Identification Proof <span className="text-destructive">*</span>
           </Label>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="sm" className="w-28 bg-transparent">
+            <input
+              type="file"
+              id="uploadId"
+              className="hidden"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => handleFileChange('identificationProof', e.target.files?.[0] || null)}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-28 bg-transparent"
+              onClick={() => document.getElementById('uploadId')?.click()}
+            >
               Choose File
             </Button>
-            <span className="text-sm text-muted-foreground">No file chosen</span>
+            <span className="text-sm text-muted-foreground">
+              {data.identificationProof || 'No file chosen'}
+            </span>
           </div>
         </div>
       </div>
