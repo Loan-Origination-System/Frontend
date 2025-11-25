@@ -53,8 +53,12 @@ export default function LoginPage() {
                       New User
                     </Button>
                   </Link>
-                  <Link href="/loan-application" className="flex-1 max-w-[200px]">
-                    <Button className="w-full bg-[#003DA5] hover:bg-[#002D7A] text-white" size="lg">
+                  <Link href="/verify" className="flex-1 max-w-[200px]">
+                    <Button
+                      variant="outline"
+                      className="w-full border-2 border-[#003DA5] text-[#003DA5] hover:bg-[#003DA5] hover:text-white bg-transparent"
+                      size="lg"
+                    >
                       Existing User
                     </Button>
                   </Link>

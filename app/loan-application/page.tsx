@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,7 @@ import { PersonalDetailsForm } from "@/components/PersonalDetail"
 import { CoBorrowerDetailsForm } from "@/components/CoBorrowerDetail"
 import { SecurityDetailsForm } from "@/components/SecurityDetail"
 import { RepaymentSourceForm } from "@/components/RepaymentSource"
+import { fetchLoanData } from "@/services/api"
 
 const steps = [
   "Loan Details",
@@ -26,12 +28,77 @@ const steps = [
 ]
 
 export default function LoanApplicationPage() {
-  const [currentStep, setCurrentStep] = useState(0)
+  const searchParams = useSearchParams()
+  const stepParam = searchParams.get('step')
+  const [currentStep, setCurrentStep] = useState(stepParam ? parseInt(stepParam) : 0)
   const [loanAmount, setLoanAmount] = useState([500000])
   const [interestRate, setInterestRate] = useState([8.0])
   const [tenure, setTenure] = useState([12])
+  const [totalLoanInput, setTotalLoanInput] = useState("")
   const [showDocumentPopup, setShowDocumentPopup] = useState(false)
   const [formData, setFormData] = useState({})
+  const [loanSectorOptions, setLoanSectorOptions] = useState<any[]>([])
+  const [loanSubSectorOptions, setLoanSubSectorOptions] = useState<any[]>([])
+  const [selectedSector, setSelectedSector] = useState("")
+  const [selectedSubSector, setSelectedSubSector] = useState("")
+  const [loanTypeOptions, setLoanTypeOptions] = useState<any[]>([])
+  const [selectedLoanType, setSelectedLoanType] = useState("")
+  const [subSectorCategoryOptions, setSubSectorCategoryOptions] = useState<any[]>([])
+  const [selectedSubSectorCategory, setSelectedSubSectorCategory] = useState("")
+
+  useEffect(() => {
+    // Load loan data from API
+    const loadLoanData = async () => {
+      try {
+        const result = await fetchLoanData()
+        if (result && result.loanSector && Array.isArray(result.loanSector)) {
+          setLoanSectorOptions(result.loanSector)
+        }
+        if (result && result.loanType && Array.isArray(result.loanType)) {
+          setLoanTypeOptions(result.loanType)
+        }
+      } catch (error) {
+        console.error('Failed to load loan data:', error)
+      }
+    }
+    loadLoanData()
+  }, [])
+
+  // Filter sub-sectors when sector is selected
+  useEffect(() => {
+    if (selectedSector) {
+      const sector = loanSectorOptions.find(
+        (s) => s.loan_sector_code_1 === selectedSector
+      )
+      if (sector && sector.loanSubSector && Array.isArray(sector.loanSubSector)) {
+        setLoanSubSectorOptions(sector.loanSubSector)
+      } else {
+        setLoanSubSectorOptions([])
+      }
+      setSelectedSubSector("")
+    } else {
+      setLoanSubSectorOptions([])
+      setSelectedSubSector("")
+    }
+  }, [selectedSector, loanSectorOptions])
+
+  // Filter sub-sector categories when sub-sector is selected
+  useEffect(() => {
+    if (selectedSubSector) {
+      const subSectorIndex = parseInt(selectedSubSector.split('-')[1])
+      const subSector = loanSubSectorOptions[subSectorIndex]
+      
+      if (subSector && subSector.loanSubSectorCategory && Array.isArray(subSector.loanSubSectorCategory)) {
+        setSubSectorCategoryOptions(subSector.loanSubSectorCategory)
+      } else {
+        setSubSectorCategoryOptions([])
+      }
+      setSelectedSubSectorCategory("")
+    } else {
+      setSubSectorCategoryOptions([])
+      setSelectedSubSectorCategory("")
+    }
+  }, [selectedSubSector, loanSubSectorOptions])
 
   const handlePersonalDetailsNext = (data: any) => {
     setFormData({ ...formData, ...data })
@@ -70,7 +137,12 @@ export default function LoanApplicationPage() {
   }
 
   const calculateEMI = () => {
-    const P = loanAmount[0]
+    // Return 0 if no loan amount is entered
+    if (!totalLoanInput || totalLoanInput === "" || parseFloat(totalLoanInput) <= 0) {
+      return "0.00"
+    }
+    
+    const P = parseFloat(totalLoanInput)
     const r = interestRate[0] / 12 / 100 // Monthly interest rate
     const n = tenure[0] // Loan tenure in months
     
@@ -88,6 +160,17 @@ export default function LoanApplicationPage() {
     }
     
     return emi.toFixed(2)
+  }
+
+  const isFormValid = () => {
+    return (
+      selectedSector !== "" &&
+      selectedLoanType !== "" &&
+      selectedSubSector !== "" &&
+      selectedSubSectorCategory !== "" &&
+      totalLoanInput !== "" &&
+      parseFloat(totalLoanInput) > 0
+    )
   }
 
   return (
@@ -162,14 +245,42 @@ export default function LoanApplicationPage() {
                   <Label htmlFor="loan-sector" className="text-gray-700 font-medium">
                     Loan Sector <span className="text-red-500">*</span>
                   </Label>
-                  <Select>
+                  <Select value={selectedSector} onValueChange={setSelectedSector}>
                     <SelectTrigger id="loan-sector" className="mt-1.5">
                       <SelectValue placeholder="[Select]" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="transport">Transport</SelectItem>
-                      <SelectItem value="housing">Housing</SelectItem>
-                      <SelectItem value="business">Business</SelectItem>
+                      {loanSectorOptions.length > 0 ? (
+                        loanSectorOptions.map((option, index) => (
+                          <SelectItem key={option.loan_sector_code_1 || index} value={option.loan_sector_code_1}>
+                            {option.loan_sector}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="loading" disabled>Loading...</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="vehicle-type" className="text-gray-700 font-medium">
+                    Loan Type: <span className="text-red-500">*</span>
+                  </Label>
+                  <Select value={selectedLoanType} onValueChange={setSelectedLoanType}>
+                    <SelectTrigger id="vehicle-type" className="mt-1.5">
+                      <SelectValue placeholder="[Select]" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {loanTypeOptions.length > 0 ? (
+                        loanTypeOptions.map((option, index) => (
+                          <SelectItem key={`loantype-${index}`} value={`${option.loan_type_code_1}-${index}`}>
+                            {option.loan_type}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="loading" disabled>Loading...</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -178,29 +289,46 @@ export default function LoanApplicationPage() {
                   <Label htmlFor="loan-subsector" className="text-gray-700 font-medium">
                     Loan Sub-Sector <span className="text-red-500">*</span>
                   </Label>
-                  <Select>
+                  <Select value={selectedSubSector} onValueChange={setSelectedSubSector}>
                     <SelectTrigger id="loan-subsector" className="mt-1.5">
                       <SelectValue placeholder="[Select]" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="personal">Personal Vehicle</SelectItem>
-                      <SelectItem value="commercial">Commercial Vehicle</SelectItem>
+                      {loanSubSectorOptions.length > 0 ? (
+                        loanSubSectorOptions.map((option, index) => (
+                          <SelectItem key={`subsector-${index}`} value={`${option.sector_link_code}-${index}`}>
+                            {option.sub_sector}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="loading" disabled>
+                          {selectedSector ? 'No sub-sectors available' : 'Select sector first'}
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="vehicle-type" className="text-gray-700 font-medium">
-                    Vechicle Type: <span className="text-red-500">*</span>
+                  <Label htmlFor="sub-sector-category" className="text-gray-700 font-medium">
+                    Loan Sub-Sector Category <span className="text-red-500">*</span>
                   </Label>
-                  <Select>
-                    <SelectTrigger id="vehicle-type" className="mt-1.5">
+                  <Select value={selectedSubSectorCategory} onValueChange={setSelectedSubSectorCategory}>
+                    <SelectTrigger id="sub-sector-category" className="mt-1.5">
                       <SelectValue placeholder="[Select]" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="car">Car</SelectItem>
-                      <SelectItem value="suv">SUV</SelectItem>
-                      <SelectItem value="truck">Truck</SelectItem>
+                      {subSectorCategoryOptions.length > 0 ? (
+                        subSectorCategoryOptions.map((option, index) => (
+                          <SelectItem key={`category-${index}`} value={`${option.sub_sector_link_code}-${index}`}>
+                            {option.sub_cat_sector}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="loading" disabled>
+                          {selectedSubSector ? 'No categories available' : 'Select sub-sector first'}
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -250,7 +378,14 @@ export default function LoanApplicationPage() {
                   <Label htmlFor="total-loan" className="text-gray-700 font-medium">
                     Total Loan Required (Nu.) <span className="text-red-500">*</span>
                   </Label>
-                  <Input id="total-loan" type="text" placeholder="Enter Total Loan Amount" className="mt-1.5" />
+                  <Input 
+                    id="total-loan" 
+                    type="number" 
+                    placeholder="Enter Total Loan Amount" 
+                    className="mt-1.5" 
+                    value={totalLoanInput}
+                    onChange={(e) => setTotalLoanInput(e.target.value)}
+                  />
                 </div>
 
                 <div>
@@ -259,87 +394,13 @@ export default function LoanApplicationPage() {
                   </Label>
                   <Textarea id="purpose" placeholder="Write your purpose" rows={3} className="mt-1.5" />
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="interest-rate" className="text-gray-700 font-medium">
-                      Interest Rate (%)<span className="text-red-500">*</span>
-                    </Label>
-                    <Select>
-                      <SelectTrigger id="interest-rate" className="mt-1.5">
-                        <SelectValue placeholder="[Select]" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="8">8.0%</SelectItem>
-                        <SelectItem value="10">10.0%</SelectItem>
-                        <SelectItem value="12">12.0%</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="tenure" className="text-gray-700 font-medium">
-                      Tenure (months)<span className="text-red-500">*</span>
-                    </Label>
-                    <Input id="tenure" type="text" placeholder="Enter Number of Months" className="mt-1.5" />
-                  </div>
-                </div>
               </div>
 
-              {/* EMI Calculator */}
-              <div className="border-t pt-6 space-y-6">
-                <h3 className="font-bold text-lg text-gray-900">EMI Calculator</h3>
-
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <Label className="text-gray-700">Loan Amount (Nu.)</Label>
-                      <span className="font-semibold text-gray-900">{loanAmount[0].toLocaleString()}</span>
-                    </div>
-                    <Slider
-                      value={loanAmount}
-                      onValueChange={setLoanAmount}
-                      min={100000}
-                      max={10000000}
-                      step={50000}
-                      className="w-full [&_[role=slider]]:bg-[#003DA5] [&_[role=slider]]:border-[#003DA5]"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <Label className="text-gray-700">Interest Rate %</Label>
-                      <span className="font-semibold text-gray-900">{interestRate[0].toFixed(1)}</span>
-                    </div>
-                    <Slider
-                      value={interestRate}
-                      onValueChange={setInterestRate}
-                      min={5}
-                      max={20}
-                      step={0.5}
-                      className="w-full [&_[role=slider]]:bg-[#003DA5] [&_[role=slider]]:border-[#003DA5]"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <Label className="text-gray-700">Loan Tenure in Months</Label>
-                      <span className="font-semibold text-gray-900">{tenure[0]}</span>
-                    </div>
-                    <Slider
-                      value={tenure}
-                      onValueChange={setTenure}
-                      min={6}
-                      max={60}
-                      step={6}
-                      className="w-full [&_[role=slider]]:bg-[#003DA5] [&_[role=slider]]:border-[#003DA5]"
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 p-6 rounded-lg text-right border border-gray-200">
-                  <p className="text-sm text-gray-600 mb-2">Your EMI:</p>
-                  <p className="text-4xl font-bold text-[#FF9800]">Nu. {calculateEMI()}</p>
+              {/* EMI Display */}
+              <div className="border-t pt-6">
+                <div className="bg-gradient-to-br from-[#FF9800] to-[#FF6F00] p-10 rounded-xl text-center shadow-lg">
+                  <p className="text-lg text-white/90 mb-3 font-medium">Your Monthly EMI</p>
+                  <p className="text-6xl font-bold text-white">Nu. {calculateEMI()}</p>
                 </div>
               </div>
             </CardContent>
@@ -361,8 +422,9 @@ export default function LoanApplicationPage() {
           </Button>
           <Button
             size="lg"
-            className="bg-[#003DA5] hover:bg-[#002D7A] text-white px-8"
+            className="bg-[#003DA5] hover:bg-[#002D7A] text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => setShowDocumentPopup(true)}
+            disabled={!isFormValid()}
           >
             Next
           </Button>

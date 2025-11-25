@@ -9,8 +9,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "LOS - Bhutan Insurance Limited",
-  description: "Apply for your loan anytime, anywhere with BIL's new Digital Loan System",
-  generator: "v0.app",
+  description: "Apply for your loan anytime, anywhere with BIL's new Digital Loan System"
 }
 
 export default function RootLayout({

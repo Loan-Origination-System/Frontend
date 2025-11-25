@@ -18,9 +18,9 @@ export default function DocumentPopup({ open, onOpenChange, onProceed }: Documen
     onOpenChange(false);
     if (onProceed) {
       onProceed();
-    } else {
-      router.push("/login");
     }
+    // Always navigate to login page after closing
+    router.push("/login");
   };
 
   return (
@@ -28,7 +28,7 @@ export default function DocumentPopup({ open, onOpenChange, onProceed }: Documen
       <DialogContent className="max-w-md p-6 rounded-2xl">
         <DialogHeader className="flex flex-col items-center gap-2">
           <Image
-            src="/banner.png"
+            src="/logo.png"
             alt="Bhutan Insurance Logo"
             width={80}
             height={80}
