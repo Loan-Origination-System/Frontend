@@ -108,18 +108,18 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-10">
       {/* Co-Borrower Personal Information */}
-      <div className="bg-card border rounded-lg p-6 space-y-6">
-        <h2 className="text-xl font-semibold">Co-Borrower Personal Information</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Co-Borrower Personal Information</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="co-salutation">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-salutation" className="text-gray-800 font-semibold text-sm">
               Salutation <span className="text-destructive">*</span>
             </Label>
             <Select value={data.salutation} onValueChange={(value) => setData({ ...data, salutation: value })}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
               <SelectContent>
@@ -334,8 +334,8 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
       </div>
 
       {/* Contact Information */}
-      <div className="bg-card border rounded-lg p-6 space-y-6">
-        <h2 className="text-xl font-semibold">Contact Information</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Contact Information</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
@@ -378,8 +378,8 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
       </div>
 
       {/* Permanent Address */}
-      <div className="bg-card border rounded-lg p-6 space-y-6">
-        <h2 className="text-xl font-semibold">Permanent Address</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Permanent Address</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-2">
@@ -411,10 +411,18 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
 
           <div className="space-y-2">
             <Label htmlFor="co-permDzongkhag">
-              Dzongkhag <span className="text-destructive">*</span>
+              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Dzongkhag' : 'State'} <span className="text-destructive">*</span>
             </Label>
+            {data.permCountry && !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
+              <Input
+                id="co-permDzongkhag"
+                placeholder="Enter State"
+                value={data.permDzongkhag || ""}
+                onChange={(e) => setData({ ...data, permDzongkhag: e.target.value })}
+              />
+            ) : (
             <Select 
-              value={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.permDzongkhag} 
+              value={data.permDzongkhag || ''} 
               onValueChange={(value) => setData({ ...data, permDzongkhag: value })}
               disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
@@ -438,14 +446,23 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
                 )}
               </SelectContent>
             </Select>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="co-permGewog">
-              Gewog <span className="text-destructive">*</span>
+              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Gewog' : 'Province'} <span className="text-destructive">*</span>
             </Label>
+            {data.permCountry && !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
+              <Input
+                id="co-permGewog"
+                placeholder="Enter Province"
+                value={data.permGewog || ""}
+                onChange={(e) => setData({ ...data, permGewog: e.target.value })}
+              />
+            ) : (
             <Select 
-              value={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.permGewog} 
+              value={data.permGewog || ''} 
               onValueChange={(value) => setData({ ...data, permGewog: value })}
               disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
@@ -469,18 +486,19 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
                 )}
               </SelectContent>
             </Select>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="co-permVillage">
-              Village/Street <span className="text-destructive">*</span>
+              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Village/Street' : 'Street'} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="co-permVillage"
-              placeholder="Enter Village/Street"
-              value={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.permVillage || ""}
+              placeholder={data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Enter Village/Street' : 'Enter Street'}
+              value={data.permVillage || ""}
               onChange={(e) => setData({ ...data, permVillage: e.target.value })}
-              disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
+              disabled={!data.permCountry}
             />
           </div>
         </div>
@@ -502,8 +520,8 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
       </div>
 
       {/* Current Address */}
-      <div className="bg-card border rounded-lg p-6 space-y-6">
-        <h2 className="text-xl font-semibold">Current/Residential Address</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Current/Residential Address</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-2">
@@ -535,10 +553,18 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
 
           <div className="space-y-2">
             <Label htmlFor="co-currDzongkhag">
-              Dzongkhag <span className="text-destructive">*</span>
+              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Dzongkhag' : 'State'} <span className="text-destructive">*</span>
             </Label>
+            {data.currCountry && !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
+              <Input
+                id="co-currDzongkhag"
+                placeholder="Enter State"
+                value={data.currDzongkhag || ""}
+                onChange={(e) => setData({ ...data, currDzongkhag: e.target.value })}
+              />
+            ) : (
             <Select 
-              value={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.currDzongkhag} 
+              value={data.currDzongkhag || ''} 
               onValueChange={(value) => setData({ ...data, currDzongkhag: value })}
               disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
@@ -562,14 +588,23 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
                 )}
               </SelectContent>
             </Select>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="co-currGewog">
-              Gewog <span className="text-destructive">*</span>
+              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Gewog' : 'Province'} <span className="text-destructive">*</span>
             </Label>
+            {data.currCountry && !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
+              <Input
+                id="co-currGewog"
+                placeholder="Enter Province"
+                value={data.currGewog || ""}
+                onChange={(e) => setData({ ...data, currGewog: e.target.value })}
+              />
+            ) : (
             <Select 
-              value={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.currGewog} 
+              value={data.currGewog || ''} 
               onValueChange={(value) => setData({ ...data, currGewog: value })}
               disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
@@ -593,18 +628,19 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
                 )}
               </SelectContent>
             </Select>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="co-currVillage">
-              Village/Street <span className="text-destructive">*</span>
+              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Village/Street' : 'Street'} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="co-currVillage"
-              placeholder="Enter Village/Street"
-              value={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.currVillage || ""}
+              placeholder={data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Enter Village/Street' : 'Enter Street'}
+              value={data.currVillage || ""}
               onChange={(e) => setData({ ...data, currVillage: e.target.value })}
-              disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
+              disabled={!data.currCountry}
             />
           </div>
         </div>
@@ -641,8 +677,8 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
       </div>
 
       {/* PEP Declaration */}
-      <div className="bg-card border rounded-lg p-6 space-y-6">
-        <h2 className="text-xl font-semibold">PEP Declaration</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">PEP Declaration</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-2">
@@ -763,7 +799,7 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
       </div>
 
       {/* Employment Status */}
-      <div className="bg-card border rounded-lg p-6 space-y-6">
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-6 shadow-sm">
         <div className="space-y-4">
           <Label>Employment Status*</Label>
           <RadioGroup
@@ -795,8 +831,8 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
 
       {/* Employment Details */}
       {data.employmentStatus === "employed" && (
-        <div className="bg-card border rounded-lg p-6 space-y-6">
-          <h2 className="text-xl font-semibold">Employment Details</h2>
+        <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+          <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Employment Details</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
@@ -1049,11 +1085,11 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
         </Button>
       </div>
 
-      <div className="flex justify-between gap-4">
-        <Button type="button" onClick={onBack} variant="secondary" size="lg" className="min-w-32">
+      <div className="flex justify-between gap-6 pt-4">
+        <Button type="button" onClick={onBack} variant="secondary" size="lg" className="min-w-40 px-10 py-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
           Back
         </Button>
-        <Button type="submit" size="lg" className="min-w-32">
+        <Button type="submit" size="lg" className="min-w-40 px-10 py-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all bg-[#003DA5] hover:bg-[#002D7A]">
           Next
         </Button>
       </div>

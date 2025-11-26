@@ -98,8 +98,8 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
   return (
     <form onSubmit={handleSubmit} className="space-y-10">
       {/* INCOME DETAILS */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">INCOME DETAILS</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">INCOME DETAILS</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-3">
@@ -216,8 +216,8 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
       </div>
 
       {/* First Guarantor */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">Guarantor 1</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Guarantor 1</h2>
 
         {/* Row 1: Salutation, Name, Nationality, ID Type */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -460,8 +460,8 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
       </div>
 
       {/* Permanent Address */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">Permanent Address</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Permanent Address</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-3">
@@ -493,10 +493,18 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
 
           <div className="space-y-3">
             <Label htmlFor="perm-dzongkhag">
-              Dzongkhag <span className="text-destructive">*</span>
+              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Dzongkhag' : 'State'} <span className="text-destructive">*</span>
             </Label>
+            {data.permCountry && !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
+              <Input
+                id="perm-dzongkhag"
+                placeholder="Enter State"
+                value={data.permDzongkhag || ""}
+                onChange={(e) => setData({ ...data, permDzongkhag: e.target.value })}
+              />
+            ) : (
             <Select 
-              value={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.permDzongkhag} 
+              value={data.permDzongkhag || ''} 
               onValueChange={(value) => setData({ ...data, permDzongkhag: value })}
               disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
@@ -520,14 +528,23 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
                 )}
               </SelectContent>
             </Select>
+            )}
           </div>
 
           <div className="space-y-3">
             <Label htmlFor="perm-gewog">
-              Gewog <span className="text-destructive">*</span>
+              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Gewog' : 'Province'} <span className="text-destructive">*</span>
             </Label>
+            {data.permCountry && !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
+              <Input
+                id="perm-gewog"
+                placeholder="Enter Province"
+                value={data.permGewog || ""}
+                onChange={(e) => setData({ ...data, permGewog: e.target.value })}
+              />
+            ) : (
             <Select 
-              value={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.permGewog} 
+              value={data.permGewog || ''} 
               onValueChange={(value) => setData({ ...data, permGewog: value })}
               disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
@@ -551,23 +568,27 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
                 )}
               </SelectContent>
             </Select>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-3">
             <Label htmlFor="perm-village">
-              Village/Street <span className="text-destructive">*</span>
+              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Village/Street' : 'Street'} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="perm-village"
-              placeholder="Enter Village/Street"
-              value={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.permVillage || ""}
+              placeholder={data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Enter Village/Street' : 'Enter Street'}
+              value={data.permVillage || ""}
               onChange={(e) => setData({ ...data, permVillage: e.target.value })}
-              disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
+              disabled={!data.permCountry}
             />
           </div>
 
+          {/* Thram and House fields - only for Bhutan */}
+          {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) && (
+          <>
           <div className="space-y-3">
             <Label htmlFor="perm-thram">Thram No</Label>
             <Input
@@ -589,6 +610,8 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
               disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             />
           </div>
+          </>
+          )}
         </div>
 
         {data.permCountry && !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) && (
@@ -608,8 +631,8 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
       </div>
 
       {/* Current/Residential Address */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">Current/Residential Address</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Current/Residential Address</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-3">
@@ -641,10 +664,18 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
 
           <div className="space-y-3">
             <Label htmlFor="curr-dzongkhag">
-              Dzongkhag <span className="text-destructive">*</span>
+              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Dzongkhag' : 'State'} <span className="text-destructive">*</span>
             </Label>
+            {data.currCountry && !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
+              <Input
+                id="curr-dzongkhag"
+                placeholder="Enter State"
+                value={data.currDzongkhag || ""}
+                onChange={(e) => setData({ ...data, currDzongkhag: e.target.value })}
+              />
+            ) : (
             <Select 
-              value={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.currDzongkhag} 
+              value={data.currDzongkhag || ''} 
               onValueChange={(value) => setData({ ...data, currDzongkhag: value })}
               disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
@@ -668,14 +699,23 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
                 )}
               </SelectContent>
             </Select>
+            )}
           </div>
 
           <div className="space-y-3">
             <Label htmlFor="curr-gewog">
-              Gewog <span className="text-destructive">*</span>
+              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Gewog' : 'Province'} <span className="text-destructive">*</span>
             </Label>
+            {data.currCountry && !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
+              <Input
+                id="curr-gewog"
+                placeholder="Enter Province"
+                value={data.currGewog || ""}
+                onChange={(e) => setData({ ...data, currGewog: e.target.value })}
+              />
+            ) : (
             <Select 
-              value={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.currGewog} 
+              value={data.currGewog || ''} 
               onValueChange={(value) => setData({ ...data, currGewog: value })}
               disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
@@ -699,20 +739,21 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
                 )}
               </SelectContent>
             </Select>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-3">
             <Label htmlFor="curr-village">
-              Village/Street <span className="text-destructive">*</span>
+              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Village/Street' : 'Street'} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="curr-village"
-              placeholder="Enter Village/Street"
-              value={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.currVillage || ""}
+              placeholder={data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Enter Village/Street' : 'Enter Street'}
+              value={data.currVillage || ""}
               onChange={(e) => setData({ ...data, currVillage: e.target.value })}
-              disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
+              disabled={!data.currCountry}
             />
           </div>
 
@@ -772,8 +813,8 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
       </div>
 
       {/* PEP Declaration */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">PEP Declaration</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">PEP Declaration</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-3">
@@ -929,11 +970,11 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
         </div>
       ))}
 
-      <div className="flex justify-between gap-4">
-        <Button type="button" onClick={onBack} variant="secondary" size="lg" className="min-w-32">
+      <div className="flex justify-between gap-6 pt-4">
+        <Button type="button" onClick={onBack} variant="secondary" size="lg" className="min-w-40 px-10 py-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
           Back
         </Button>
-        <Button type="submit" size="lg" className="min-w-32">
+        <Button type="submit" size="lg" className="min-w-40 px-10 py-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all bg-[#003DA5] hover:bg-[#002D7A]">
           Next
         </Button>
       </div>
