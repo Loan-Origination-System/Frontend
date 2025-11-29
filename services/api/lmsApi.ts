@@ -1,4 +1,5 @@
 // LMS API Service
+import { CloudCog } from 'lucide-react'
 import { API_CONFIG, getAuthHeaders, fetchWithRetry, getCachedData, setCachedData } from './config'
 
 /**
@@ -37,6 +38,7 @@ export async function fetchLoanData() {
     const result = await response.json()
     
     console.log('Loan Data API Response:', result)
+    console.log('Response Status:', response.status)
     
     // The API returns: { status: 'success', data: { loanType: [], loanSector: [] } }
     if (result && result.data) {
@@ -58,5 +60,6 @@ export async function fetchLoanData() {
     }
     
     return { loanType: [], loanSector: [] }
+    
   }
 }

@@ -45,14 +45,19 @@ export default function LoanApplicationPage() {
   const [selectedLoanType, setSelectedLoanType] = useState("")
   const [subSectorCategoryOptions, setSubSectorCategoryOptions] = useState<any[]>([])
   const [selectedSubSectorCategory, setSelectedSubSectorCategory] = useState("")
+  const [apiTenure, setApiTenure] = useState<number>(0)
+  const [apiInterestRate, setApiInterestRate] = useState<number>(0)
 
   useEffect(() => {
     // Load loan data from API
     const loadLoanData = async () => {
       try {
         const result = await fetchLoanData()
+        console.log('API Result:', result)
+        console.log('Loan Sectors:', result?.loanSector)
         if (result && result.loanSector && Array.isArray(result.loanSector)) {
           setLoanSectorOptions(result.loanSector)
+          console.log('Loan Sector Options Set:', result.loanSector.length, 'sectors')
         }
         if (result && result.loanType && Array.isArray(result.loanType)) {
           setLoanTypeOptions(result.loanType)
@@ -68,17 +73,25 @@ export default function LoanApplicationPage() {
   useEffect(() => {
     if (selectedSector) {
       const sector = loanSectorOptions.find(
-        (s) => s.loan_sector_code_1 === selectedSector
+        (s) => s.loan_sector_id === parseInt(selectedSector)
       )
+      console.log('Found sector:', sector)
       if (sector && sector.loanSubSector && Array.isArray(sector.loanSubSector)) {
         setLoanSubSectorOptions(sector.loanSubSector)
+        console.log('Sub-sectors loaded:', sector.loanSubSector.length)
       } else {
         setLoanSubSectorOptions([])
       }
       setSelectedSubSector("")
+      setSelectedSubSectorCategory("")
+      setApiTenure(0)
+      setApiInterestRate(0)
     } else {
       setLoanSubSectorOptions([])
       setSelectedSubSector("")
+      setSelectedSubSectorCategory("")
+      setApiTenure(0)
+      setApiInterestRate(0)
     }
   }, [selectedSector, loanSectorOptions])
 
@@ -93,10 +106,23 @@ export default function LoanApplicationPage() {
       } else {
         setSubSectorCategoryOptions([])
       }
+      
+      // Extract interest rate and loan tenure from the selected sub-sector
+      if (subSector) {
+        const tenure = parseFloat(subSector.loan_tenure || '0')
+        const rate = parseFloat(subSector.interest_rate || '0')
+        console.log('Selected SubSector Tenure:', tenure, 'Rate:', rate)
+        setApiTenure(tenure)
+        setApiInterestRate(rate)
+      }
+      
       setSelectedSubSectorCategory("")
     } else {
       setSubSectorCategoryOptions([])
       setSelectedSubSectorCategory("")
+      // Reset to 0 when no sub-sector is selected
+      setApiTenure(0)
+      setApiInterestRate(0)
     }
   }, [selectedSubSector, loanSubSectorOptions])
 
@@ -143,8 +169,8 @@ export default function LoanApplicationPage() {
     }
     
     const P = parseFloat(totalLoanInput)
-    const r = interestRate[0] / 12 / 100 // Monthly interest rate
-    const n = tenure[0] // Loan tenure in months
+    const r = (apiInterestRate > 0 ? apiInterestRate : interestRate[0]) / 12 / 100 // Monthly interest rate
+    const n = apiTenure > 0 ? apiTenure : tenure[0] // Loan tenure in months
     
     // If interest rate is 0, simply divide principal by tenure
     if (r === 0) {
@@ -242,34 +268,12 @@ export default function LoanApplicationPage() {
             <CardContent className="p-10 space-y-8">
               <div className="space-y-6">
                 <div className="space-y-2.5">
-                  <Label htmlFor="loan-sector" className="text-gray-800 font-semibold text-base">
-                    Loan Sector <span className="text-red-500">*</span>
-                  </Label>
-                  <Select value={selectedSector} onValueChange={setSelectedSector}>
-                    <SelectTrigger id="loan-sector" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
-                      <SelectValue placeholder="[Select]" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {loanSectorOptions.length > 0 ? (
-                        loanSectorOptions.map((option, index) => (
-                          <SelectItem key={option.loan_sector_code_1 || index} value={option.loan_sector_code_1}>
-                            {option.loan_sector}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="loading" disabled>Loading...</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2.5">
                   <Label htmlFor="vehicle-type" className="text-gray-800 font-semibold text-base">
                     Loan Type: <span className="text-red-500">*</span>
                   </Label>
                   <Select value={selectedLoanType} onValueChange={setSelectedLoanType}>
-                    <SelectTrigger id="vehicle-type" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
-                      <SelectValue placeholder="[Select]" />
+                    <SelectTrigger id="vehicle-type" className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                      <SelectValue placeholder="[Select]" className="truncate" />
                     </SelectTrigger>
                     <SelectContent>
                       {loanTypeOptions.length > 0 ? (
@@ -286,17 +290,42 @@ export default function LoanApplicationPage() {
                 </div>
 
                 <div className="space-y-2.5">
+                  <Label htmlFor="loan-sector" className="text-gray-800 font-semibold text-base">
+                    Loan Sector <span className="text-red-500">*</span>
+                  </Label>
+                  <Select value={selectedSector} onValueChange={(value) => {
+                    console.log('Sector selected:', value)
+                    setSelectedSector(value)
+                  }}>
+                    <SelectTrigger id="loan-sector" className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                      <SelectValue placeholder="[Select]" className="truncate" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {loanSectorOptions.length > 0 ? (
+                        loanSectorOptions.map((option, index) => (
+                          <SelectItem key={option.loan_sector_id || index} value={String(option.loan_sector_id)}>
+                            {option.loan_sector}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="loading" disabled>Loading...</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2.5">
                   <Label htmlFor="loan-subsector" className="text-gray-800 font-semibold text-base">
                     Loan Sub-Sector <span className="text-red-500">*</span>
                   </Label>
                   <Select value={selectedSubSector} onValueChange={setSelectedSubSector}>
-                    <SelectTrigger id="loan-subsector" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
-                      <SelectValue placeholder="[Select]" />
+                    <SelectTrigger id="loan-subsector" className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                      <SelectValue placeholder="[Select]" className="truncate" />
                     </SelectTrigger>
                     <SelectContent>
                       {loanSubSectorOptions.length > 0 ? (
                         loanSubSectorOptions.map((option, index) => (
-                          <SelectItem key={`subsector-${index}`} value={`${option.sector_link_code}-${index}`}>
+                          <SelectItem key={`subsector-${index}`} value={`${option.sub_sector_id}-${index}`}>
                             {option.sub_sector}
                           </SelectItem>
                         ))
@@ -314,13 +343,13 @@ export default function LoanApplicationPage() {
                     Loan Sub-Sector Category <span className="text-red-500">*</span>
                   </Label>
                   <Select value={selectedSubSectorCategory} onValueChange={setSelectedSubSectorCategory}>
-                    <SelectTrigger id="sub-sector-category" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
-                      <SelectValue placeholder="[Select]" />
+                    <SelectTrigger id="sub-sector-category" className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                      <SelectValue placeholder="[Select]" className="truncate" />
                     </SelectTrigger>
                     <SelectContent>
                       {subSectorCategoryOptions.length > 0 ? (
                         subSectorCategoryOptions.map((option, index) => (
-                          <SelectItem key={`category-${index}`} value={`${option.sub_sector_link_code}-${index}`}>
+                          <SelectItem key={`category-${index}`} value={`${option.sub_sector_cat_id}-${index}`}>
                             {option.sub_cat_sector}
                           </SelectItem>
                         ))
@@ -355,7 +384,9 @@ export default function LoanApplicationPage() {
                       <Calendar className="h-5 w-5" />
                       <span className="text-sm font-semibold">Loan Tenure</span>
                     </div>
-                    <p className="text-4xl font-bold">5 Years</p>
+                    <p className="text-4xl font-bold">
+                      {apiTenure > 0 ? `${Math.round(apiTenure / 12)} Years` : '0 Years'}
+                    </p>
                   </div>
 
                   <div className="bg-gradient-to-br from-[#FF9800] to-[#FF6F00] text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
@@ -363,7 +394,9 @@ export default function LoanApplicationPage() {
                       <Percent className="h-5 w-5" />
                       <span className="text-sm font-semibold">Interest Rate</span>
                     </div>
-                    <p className="text-4xl font-bold">12.45%</p>
+                    <p className="text-4xl font-bold">
+                      {apiInterestRate > 0 ? `${apiInterestRate}%` : '0%'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -402,12 +435,14 @@ export default function LoanApplicationPage() {
               </div>
 
               {/* EMI Display */}
+              {selectedLoanType && !selectedLoanType.includes('005') && (
               <div className="border-t border-gray-200 pt-8 mt-8">
                 <div className="bg-gradient-to-br from-[#FF9800] to-[#FF6F00] p-12 rounded-2xl text-center shadow-2xl transform hover:scale-105 transition-transform duration-300">
                   <p className="text-lg text-white/95 mb-4 font-semibold tracking-wide">Your Monthly EMI</p>
                   <p className="text-7xl font-bold text-white drop-shadow-lg">Nu. {calculateEMI()}</p>
                 </div>
               </div>
+              )}
             </CardContent>
           </Card>
         </div>
