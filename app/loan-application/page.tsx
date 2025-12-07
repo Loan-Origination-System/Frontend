@@ -128,7 +128,9 @@ export default function LoanApplicationPage() {
 
   const handlePersonalDetailsNext = (data: any) => {
     setFormData({ ...formData, ...data })
-    setCurrentStep(2) // Move to Co-Borrower Details step
+    // If hasCoBorrower is true, go to Co-Borrower Details (step 2)
+    // If hasCoBorrower is false, skip to Security Details (step 3)
+    setCurrentStep(data.hasCoBorrower ? 2 : 3)
   }
 
   const handlePersonalDetailsBack = () => {

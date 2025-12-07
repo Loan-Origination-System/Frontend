@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { fetchMaritalStatus, fetchBanks, fetchNationality, fetchIdentificationType, fetchCountry, fetchDzongkhag, fetchGewogsByDzongkhag, fetchOccupations, fetchLegalConstitution } from "@/services/api"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { fetchMaritalStatus, fetchBanks, fetchNationality, fetchIdentificationType, fetchCountry, fetchDzongkhag, fetchGewogsByDzongkhag, fetchOccupations, fetchLegalConstitution, fetchPepSubCategoryByCategory } from "@/services/api"
 
 interface PersonalDetailsFormProps {
   onNext: (data: any) => void
@@ -20,6 +21,7 @@ interface PersonalDetailsFormProps {
 export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetailsFormProps) {
   const [data, setData] = useState(formData.personalDetails || {})
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showCoBorrowerDialog, setShowCoBorrowerDialog] = useState(false)
   const [maritalStatusOptions, setMaritalStatusOptions] = useState<any[]>([])
   const [banksOptions, setBanksOptions] = useState<any[]>([])
   const [nationalityOptions, setNationalityOptions] = useState<any[]>([])
@@ -30,6 +32,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
   const [currGewogOptions, setCurrGewogOptions] = useState<any[]>([])
   const [occupationOptions, setOccupationOptions] = useState<any[]>([])
   const [organizationOptions, setOrganizationOptions] = useState<any[]>([])
+  const [pepSubCategoryOptions, setPepSubCategoryOptions] = useState<any[]>([])
 
   // Calculate date constraints
   const today = new Date().toISOString().split('T')[0]
@@ -211,6 +214,31 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
     loadCurrGewogs()
   }, [data.currDzongkhag])
 
+  // Load PEP sub-categories when pepPerson is 'yes'
+  useEffect(() => {
+    const loadPepSubCategories = async () => {
+      if (data.pepPerson === 'yes') {
+        try {
+          // Using 14003 as the PEP category code
+          const options = await fetchPepSubCategoryByCategory('14003')
+          setPepSubCategoryOptions(options)
+        } catch (error) {
+          console.error('Failed to load PEP sub-categories:', error)
+          setPepSubCategoryOptions([
+            { id: 'foreign-pep', name: 'Foreign PEP' },
+            { id: 'domestic-pep', name: 'Domestic PEP' },
+            { id: 'international-org', name: 'International Organization PEP' },
+            { id: 'family-member', name: 'Family Member of PEP' },
+            { id: 'close-associate', name: 'Close Associate of PEP' }
+          ])
+        }
+      } else {
+        setPepSubCategoryOptions([])
+      }
+    }
+    loadPepSubCategories()
+  }, [data.pepPerson])
+
   const handleFileChange = (fieldName: string, file: File | null) => {
     if (file) {
       // Validate file type and size (max 5MB)
@@ -263,8 +291,13 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (validateDates()) {
-      onNext({ personalDetails: data })
+      setShowCoBorrowerDialog(true)
     }
+  }
+
+  const handleCoBorrowerResponse = (hasCoBorrower: boolean) => {
+    setShowCoBorrowerDialog(false)
+    onNext({ personalDetails: data, hasCoBorrower })
   }
 
   return (
@@ -282,7 +315,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="mr">Mr.</SelectItem>
                 <SelectItem value="mrs">Mrs.</SelectItem>
                 <SelectItem value="ms">Ms.</SelectItem>
@@ -313,7 +346,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {nationalityOptions.length > 0 ? (
                   nationalityOptions.map((option, index) => {
                     const key = option.nationality_pk_code || option.id || option.code || `nationality-${index}`
@@ -344,7 +377,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {identificationTypeOptions.length > 0 ? (
                   identificationTypeOptions.map((option, index) => {
                     const key = option.identity_type_pk_code || option.identification_type_pk_code || option.id || `id-${index}`
@@ -467,7 +500,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {maritalStatusOptions.length > 0 ? (
                   maritalStatusOptions.map((option, index) => {
                     const key = option.marital_status_pk_code || option.id || option.value || option.code || `marital-${index}`
@@ -495,7 +528,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="male">Male</SelectItem>
                 <SelectItem value="female">Female</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
@@ -598,7 +631,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {banksOptions.length > 0 ? (
                   banksOptions.map((option, index) => {
                     // console.log('Bank option:', option)
@@ -665,7 +698,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {countryOptions.length > 0 ? (
                   countryOptions.map((option, index) => {
                     const key = option.country_pk_code || option.id || option.code || `perm-country-${index}`
@@ -706,7 +739,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {dzongkhagOptions.length > 0 ? (
                   dzongkhagOptions.map((option, index) => {
                     const key = option.dzongkhag_pk_code || option.id || option.code || `perm-dzo-${index}`
@@ -748,7 +781,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {permGewogOptions.length > 0 ? (
                   permGewogOptions.map((option, index) => {
                     const key = option.gewog_pk_code || option.id || option.code || `perm-gewog-${index}`
@@ -849,7 +882,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {countryOptions.length > 0 ? (
                   countryOptions.map((option, index) => {
                     const key = option.country_pk_code || option.id || option.code || `curr-country-${index}`
@@ -890,7 +923,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {dzongkhagOptions.length > 0 ? (
                   dzongkhagOptions.map((option, index) => {
                     const key = option.dzongkhag_pk_code || option.id || option.code || `curr-dzo-${index}`
@@ -932,7 +965,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {currGewogOptions.length > 0 ? (
                   currGewogOptions.map((option, index) => {
                     const key = option.gewog_pk_code || option.id || option.code || `curr-gewog-${index}`
@@ -1085,7 +1118,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="yes">Yes</SelectItem>
                 <SelectItem value="no">No</SelectItem>
               </SelectContent>
@@ -1094,27 +1127,45 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
 
           <div className="space-y-2.5">
             <Label htmlFor="pepSubCategory" className="text-gray-800 font-semibold text-base">PEP Sub Category*</Label>
-            <Input
-              id="pepSubCategory"
-              placeholder="Enter Full Name"
-              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
-              value={data.pepPerson === 'yes' ? data.pepSubCategory || "" : ''}
-              onChange={(e) => setData({ ...data, pepSubCategory: e.target.value })}
-              disabled={data.pepPerson !== 'yes'}
-            />
-          </div>
-
-          <div className="space-y-2.5">
-            <Label htmlFor="pepRelated" className="text-gray-800 font-semibold text-base">Is he/she related to any PEP?*</Label>
-            <Select 
-              value={data.pepPerson === 'yes' ? data.pepRelated : ''} 
-              onValueChange={(value) => setData({ ...data, pepRelated: value })}
+            <Select
+              value={data.pepPerson === 'yes' ? data.pepSubCategory : ''}
+              onValueChange={(value) => setData({ ...data, pepSubCategory: value })}
               disabled={data.pepPerson !== 'yes'}
             >
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
+                {pepSubCategoryOptions.length > 0 ? (
+                  pepSubCategoryOptions.map((option, index) => {
+                    const key = option.pep_sub_category_pk_code || option.id || option.code || `pep-sub-${index}`
+                    const value = String(option.pep_sub_category_pk_code || option.id || option.code || index)
+                    const label = option.pep_sub_category || option.name || option.label || 'Unknown'
+                    
+                    return (
+                      <SelectItem key={key} value={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2.5">
+            <Label htmlFor="pepRelated" className="text-gray-800 font-semibold text-base">Are you related to any PEP?*</Label>
+            <Select 
+              value={data.pepPerson === 'no' ? data.pepRelated : ''} 
+              onValueChange={(value) => setData({ ...data, pepRelated: value })}
+              disabled={data.pepPerson !== 'no'}
+            >
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                <SelectValue placeholder="[Select]" />
+              </SelectTrigger>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="yes">Yes</SelectItem>
                 <SelectItem value="no">No</SelectItem>
               </SelectContent>
@@ -1126,14 +1177,14 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
           <div className="space-y-2.5">
             <Label htmlFor="pepRelationship" className="text-gray-800 font-semibold text-base">Relationship*</Label>
             <Select
-              value={data.pepPerson === 'yes' ? data.pepRelationship : ''}
+              value={data.pepPerson === 'no' && data.pepRelated === 'yes' ? data.pepRelationship : ''}
               onValueChange={(value) => setData({ ...data, pepRelationship: value })}
-              disabled={data.pepPerson !== 'yes'}
+              disabled={data.pepPerson !== 'no' || data.pepRelated !== 'yes'}
             >
               <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="spouse">Spouse</SelectItem>
                 <SelectItem value="parent">Parent</SelectItem>
                 <SelectItem value="sibling">Sibling</SelectItem>
@@ -1150,9 +1201,9 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               id="pepIdentification"
               placeholder="Enter Identification No"
               className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
-              value={data.pepPerson === 'yes' ? data.pepIdentification || "" : ''}
+              value={data.pepPerson === 'no' && data.pepRelated === 'yes' ? data.pepIdentification || "" : ''}
               onChange={(e) => setData({ ...data, pepIdentification: e.target.value })}
-              disabled={data.pepPerson !== 'yes'}
+              disabled={data.pepPerson !== 'no' || data.pepRelated !== 'yes'}
             />
           </div>
 
@@ -1162,9 +1213,9 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               id="pepCategory"
               placeholder="Enter Full Name"
               className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
-              value={data.pepPerson === 'yes' ? data.pepCategory || "" : ''}
+              value={data.pepPerson === 'no' && data.pepRelated === 'yes' ? data.pepCategory || "" : ''}
               onChange={(e) => setData({ ...data, pepCategory: e.target.value })}
-              disabled={data.pepPerson !== 'yes'}
+              disabled={data.pepPerson !== 'no' || data.pepRelated !== 'yes'}
             />
           </div>
 
@@ -1174,9 +1225,9 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               id="pepSubCat2"
               placeholder="Enter Full Name"
               className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
-              value={data.pepPerson === 'yes' ? data.pepSubCat2 || "" : ''}
+              value={data.pepPerson === 'no' && data.pepRelated === 'yes' ? data.pepSubCat2 || "" : ''}
               onChange={(e) => setData({ ...data, pepSubCat2: e.target.value })}
-              disabled={data.pepPerson !== 'yes'}
+              disabled={data.pepPerson !== 'no' || data.pepRelated !== 'yes'}
             />
           </div>
         </div>
@@ -1192,7 +1243,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               className="hidden"
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => handleFileChange('identificationProof', e.target.files?.[0] || null)}
-              disabled={data.pepPerson !== 'yes'}
+              disabled={data.pepPerson !== 'no' || data.pepRelated !== 'yes'}
             />
             <Button
               type="button"
@@ -1200,12 +1251,12 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               size="sm"
               className="w-28 bg-transparent"
               onClick={() => document.getElementById('uploadId')?.click()}
-              disabled={data.pepPerson !== 'yes'}
+              disabled={data.pepPerson !== 'no' || data.pepRelated !== 'yes'}
             >
               Choose File
             </Button>
             <span className="text-sm text-muted-foreground">
-              {data.pepPerson === 'yes' ? (data.identificationProof || 'No file chosen') : 'No file chosen'}
+              {data.pepPerson === 'no' && data.pepRelated === 'yes' ? (data.identificationProof || 'No file chosen') : 'No file chosen'}
             </span>
           </div>
         </div>
@@ -1223,24 +1274,11 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
             <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent sideOffset={4}>
               <SelectItem value="yes">Yes</SelectItem>
               <SelectItem value="no">No</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="space-y-2.5">
-          <Label htmlFor="bilRelationship" className="text-gray-800 font-semibold text-base">
-            Relationship <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="bilRelationship"
-            placeholder="Enter your Relationship"
-            className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
-            value={data.bilRelationship || ""}
-            onChange={(e) => setData({ ...data, bilRelationship: e.target.value })}
-          />
         </div>
       </div>
 
@@ -1291,7 +1329,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                   <SelectValue placeholder="[Select]" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent sideOffset={4}>
                   {occupationOptions.length > 0 ? (
                     occupationOptions.map((option, index) => {
                       const key = option.occ_pk_code || option.occupation_pk_code || option.id || `occupation-${index}`
@@ -1322,7 +1360,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                   <SelectValue placeholder="[Select]" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent sideOffset={4}>
                   {organizationOptions.length > 0 ? (
                     organizationOptions.map((option, index) => {
                       const key = option.lgal_constitution_pk_code || option.legal_const_pk_code || option.id || `org-${index}`
@@ -1350,7 +1388,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                   <SelectValue placeholder="[Select]" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent sideOffset={4}>
                   <SelectItem value="government">Government</SelectItem>
                   <SelectItem value="private">Private</SelectItem>
                   <SelectItem value="corporate">Corporate</SelectItem>
@@ -1407,7 +1445,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                   <SelectValue placeholder="[Select]" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent sideOffset={4}>
                   <SelectItem value="manager">Manager</SelectItem>
                   <SelectItem value="officer">Officer</SelectItem>
                   <SelectItem value="assistant">Assistant</SelectItem>
@@ -1423,7 +1461,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                   <SelectValue placeholder="[Select]" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent sideOffset={4}>
                   <SelectItem value="p1">P1</SelectItem>
                   <SelectItem value="p2">P2</SelectItem>
                   <SelectItem value="p3">P3</SelectItem>
@@ -1439,7 +1477,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                   <SelectValue placeholder="[Select]" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent sideOffset={4}>
                   <SelectItem value="permanent">Permanent</SelectItem>
                   <SelectItem value="contract">Contract</SelectItem>
                   <SelectItem value="temporary">Temporary</SelectItem>
@@ -1461,6 +1499,26 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               />
             </div>
           </div>
+
+          {/* Contract End Date - Only visible when Nature of Service is Contract */}
+          {data.serviceNature === "contract" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor="contractEndDate" className="text-gray-800 font-semibold text-base">
+                  Contract End Date <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="date"
+                  id="contractEndDate"
+                  min={today}
+                  className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
+                  value={data.contractEndDate || ""}
+                  onChange={(e) => setData({ ...data, contractEndDate: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1472,6 +1530,34 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
           Next
         </Button>
       </div>
+
+      {/* Co-Borrower Confirmation Dialog */}
+      <AlertDialog open={showCoBorrowerDialog} onOpenChange={setShowCoBorrowerDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold text-[#003DA5]">
+              Co-Borrower Information
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-gray-600 pt-2">
+              Do you have a co-borrower for this loan application?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-3 sm:gap-3">
+            <AlertDialogCancel 
+              onClick={() => handleCoBorrowerResponse(false)}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold"
+            >
+              No, Skip to Security Details
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => handleCoBorrowerResponse(true)}
+              className="bg-[#003DA5] hover:bg-[#002D7A] text-white font-semibold"
+            >
+              Yes, Add Co-Borrower
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   )
 }

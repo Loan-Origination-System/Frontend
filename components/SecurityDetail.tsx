@@ -18,7 +18,8 @@ interface SecurityDetailsFormProps {
 
 export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetailsFormProps) {
   const [data, setData] = useState(formData.securityDetails || {})
-  const [guarantors, setGuarantors] = useState<any[]>([{}])
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [guarantors, setGuarantors] = useState<any[]>([{ isPep: '', relatedToPep: '' }])
   const [securities, setSecurities] = useState<any[]>([{}])
   const [nationalityOptions, setNationalityOptions] = useState<any[]>([])
   const [identificationTypeOptions, setIdentificationTypeOptions] = useState<any[]>([])
@@ -28,6 +29,33 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
   const [permGewogOptions, setPermGewogOptions] = useState<any[]>([])
   const [currGewogOptions, setCurrGewogOptions] = useState<any[]>([])
   const [propertyGewogOptions, setPropertyGewogOptions] = useState<any[]>([])
+
+  // Calculate date constraints
+  const today = new Date().toISOString().split('T')[0]
+  const fifteenYearsAgo = new Date()
+  fifteenYearsAgo.setFullYear(fifteenYearsAgo.getFullYear() - 15)
+  const maxDobDate = fifteenYearsAgo.toISOString().split('T')[0]  
+
+  const handleFileChange = (fieldName: string, file: File | null) => {
+    if (file) {
+      // Validate file type and size (max 5MB)
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
+      const maxSize = 5 * 1024 * 1024 // 5MB
+      
+      if (!allowedTypes.includes(file.type)) {
+        setErrors({ ...errors, [fieldName]: 'Only PDF, JPG, JPEG, and PNG files are allowed' })
+        return
+      }
+      
+      if (file.size > maxSize) {
+        setErrors({ ...errors, [fieldName]: 'File size must be less than 5MB' })
+        return
+      }
+      
+      setErrors({ ...errors, [fieldName]: '' })
+      setData({ ...data, [fieldName]: file.name })
+    }
+  }
 
   useEffect(() => {
     const loadAllData = async () => {
@@ -104,7 +132,13 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
   }
 
   const addGuarantor = () => {
-    setGuarantors([...guarantors, {}])
+    setGuarantors([...guarantors, { isPep: '', relatedToPep: '' }])
+  }
+
+  const updateGuarantor = (index: number, field: string, value: string) => {
+    const updatedGuarantors = [...guarantors]
+    updatedGuarantors[index] = { ...updatedGuarantors[index], [field]: value }
+    setGuarantors(updatedGuarantors)
   }
 
   const addSecurity = () => {
@@ -129,7 +163,7 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
       {securities.map((security, secIndex) => (
         <div key={secIndex} className="space-y-8">
           {/* Primary Security/Collateral Details */}
-          <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
+          <div className={`border rounded-lg p-8 space-y-8 shadow-sm ${secIndex === 0 ? 'bg-card' : 'bg-blue-50 border-blue-200'}`}>
             <div className="flex justify-between items-center border-b pb-4 mb-2">
               <h2 className="text-2xl font-semibold text-[#003DA5]">
                 {secIndex === 0 ? "Primary Security/Collateral Details" : `Security ${secIndex + 1}`}
@@ -146,36 +180,35 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
               )}
             </div>
 
-        {/* Security Type - Full Width */}
-        <div className="space-y-3">
-          <Label htmlFor="security-type">
-            Type of Security <span className="text-destructive">*</span>
-          </Label>
-          <Select value={data.securityType} onValueChange={(value) => setData({ ...data, securityType: value })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Security Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="land">Land</SelectItem>
-              <SelectItem value="building">Building</SelectItem>
-              <SelectItem value="vehicle">Vehicle</SelectItem>
-              <SelectItem value="equipment">Equipment</SelectItem>
-              <SelectItem value="fd">Fixed Deposit</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Ownership Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-3">
-            <Label htmlFor="ownership-type">
-              Security ownership <span className="text-destructive">*</span>
+        {/* Security Type and Ownership Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="security-type" className="text-gray-800 font-semibold text-base">
+              Type of Security <span className="text-red-500">*</span>
             </Label>
-            <Select value={data.ownershipType} onValueChange={(value) => setData({ ...data, ownershipType: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Ownership Type" />
+            <Select value={data.securityType} onValueChange={(value) => setData({ ...data, securityType: value })} required>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
+                <SelectItem value="land">Land</SelectItem>
+                <SelectItem value="building">Building</SelectItem>
+                <SelectItem value="vehicle">Vehicle</SelectItem>
+                <SelectItem value="equipment">Equipment</SelectItem>
+                <SelectItem value="fd">Fixed Deposit</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2.5">
+            <Label htmlFor="ownership-type" className="text-gray-800 font-semibold text-base">
+              Security ownership <span className="text-red-500">*</span>
+            </Label>
+            <Select value={data.ownershipType} onValueChange={(value) => setData({ ...data, ownershipType: value })} required>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                <SelectValue placeholder="[Select]" />
+              </SelectTrigger>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="self">Self Owned</SelectItem>
                 <SelectItem value="third-party">Third Party</SelectItem>
               </SelectContent>
@@ -185,17 +218,17 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
       </div>
 
       {/* Vehicle Details (if applicable) */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">Vehicle Details (If Applicable)</h2>
+      <div className={`border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm ${secIndex === 0 ? 'bg-white' : 'bg-blue-50 border-blue-200'}`}>
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Vehicle Details (If Applicable)</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="space-y-3">
-            <Label htmlFor="vehicle-type">Vehicle Type</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="vehicle-type" className="text-gray-800 font-semibold text-base">Vehicle Type</Label>
             <Select value={data.vehicleType} onValueChange={(value) => setData({ ...data, vehicleType: value })}>
-              <SelectTrigger>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="car">Car</SelectItem>
                 <SelectItem value="suv">SUV</SelectItem>
                 <SelectItem value="truck">Truck</SelectItem>
@@ -205,32 +238,35 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             </Select>
           </div>
 
-          <div className="space-y-3">
-            <Label htmlFor="vehicle-make">Make/Brand</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="vehicle-make" className="text-gray-800 font-semibold text-base">Make/Brand</Label>
             <Input
               id="vehicle-make"
               placeholder="Enter Make/Brand"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.vehicleMake || ""}
               onChange={(e) => setData({ ...data, vehicleMake: e.target.value })}
             />
           </div>
 
-          <div className="space-y-3">
-            <Label htmlFor="vehicle-model">Model</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="vehicle-model" className="text-gray-800 font-semibold text-base">Model</Label>
             <Input
               id="vehicle-model"
               placeholder="Enter Model"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.vehicleModel || ""}
               onChange={(e) => setData({ ...data, vehicleModel: e.target.value })}
             />
           </div>
 
-          <div className="space-y-3">
-            <Label htmlFor="vehicle-year">Year of Manufacture</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="vehicle-year" className="text-gray-800 font-semibold text-base">Year of Manufacture</Label>
             <Input
               id="vehicle-year"
               type="number"
               placeholder="Enter Year"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.vehicleYear || ""}
               onChange={(e) => setData({ ...data, vehicleYear: e.target.value })}
             />
@@ -238,31 +274,34 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-3">
-            <Label htmlFor="registration-no">Registration No.</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="registration-no" className="text-gray-800 font-semibold text-base">Registration No.</Label>
             <Input
               id="registration-no"
               placeholder="Enter Registration No"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.registrationNo || ""}
               onChange={(e) => setData({ ...data, registrationNo: e.target.value })}
             />
           </div>
 
-          <div className="space-y-3">
-            <Label htmlFor="chassis-no">Chassis No.</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="chassis-no" className="text-gray-800 font-semibold text-base">Chassis No.</Label>
             <Input
               id="chassis-no"
               placeholder="Enter Chassis No"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.chassisNo || ""}
               onChange={(e) => setData({ ...data, chassisNo: e.target.value })}
             />
           </div>
 
-          <div className="space-y-3">
-            <Label htmlFor="engine-no">Engine No.</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="engine-no" className="text-gray-800 font-semibold text-base">Engine No.</Label>
             <Input
               id="engine-no"
               placeholder="Enter Engine No"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.engineNo || ""}
               onChange={(e) => setData({ ...data, engineNo: e.target.value })}
             />
@@ -271,19 +310,19 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
       </div>
 
       {/* Property/Land Details */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">Property/Land Details</h2>
+      <div className={`border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm ${secIndex === 0 ? 'bg-white' : 'bg-blue-50 border-blue-200'}`}>
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Property/Land Details</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="security-dzongkhag">
-              Dzongkhag <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="security-dzongkhag" className="text-gray-800 font-semibold text-base">
+              Dzongkhag <span className="text-red-500">*</span>
             </Label>
-            <Select value={data.dzongkhag} onValueChange={(value) => setData({ ...data, dzongkhag: value })}>
-              <SelectTrigger>
+            <Select value={data.dzongkhag} onValueChange={(value) => setData({ ...data, dzongkhag: value })} required>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {dzongkhagOptions.length > 0 ? (
                   dzongkhagOptions.map((option, index) => {
                     const key = option.dzongkhag_pk_code || option.id || `sec-dzo-${index}`
@@ -302,15 +341,15 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="security-gewog">
-              Gewog <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="security-gewog" className="text-gray-800 font-semibold text-base">
+              Gewog <span className="text-red-500">*</span>
             </Label>
-            <Select value={data.gewog} onValueChange={(value) => setData({ ...data, gewog: value })}>
-              <SelectTrigger>
+            <Select value={data.gewog} onValueChange={(value) => setData({ ...data, gewog: value })} required>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {propertyGewogOptions.length > 0 ? (
                   propertyGewogOptions.map((option, index) => {
                     const key = option.gewog_pk_code || option.id || `prop-gewog-${index}`
@@ -329,76 +368,85 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="security-village">
-              Village/Street <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="security-village" className="text-gray-800 font-semibold text-base">
+              Village/Street <span className="text-red-500">*</span>
             </Label>
             <Input
               id="security-village"
               placeholder="Enter Village/Street"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.village || ""}
               onChange={(e) => setData({ ...data, village: e.target.value })}
+              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="house-no">House No.</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="house-no" className="text-gray-800 font-semibold text-base">House No.</Label>
             <Input
               id="house-no"
               placeholder="Enter House No"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.houseNo || ""}
               onChange={(e) => setData({ ...data, houseNo: e.target.value })}
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-3">
-            <Label htmlFor="thram-no">
-              Thram No. <span className="text-destructive">*</span>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="thram-no" className="text-gray-800 font-semibold text-base">
+              Thram No. <span className="text-red-500">*</span>
             </Label>
             <Input
               id="thram-no"
               placeholder="Enter Thram No"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.thramNo || ""}
               onChange={(e) => setData({ ...data, thramNo: e.target.value })}
+              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="plot-no">
-              Plot No. <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="plot-no" className="text-gray-800 font-semibold text-base">
+              Plot No. <span className="text-red-500">*</span>
             </Label>
             <Input
               id="plot-no"
               placeholder="Enter Plot No"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.plotNo || ""}
               onChange={(e) => setData({ ...data, plotNo: e.target.value })}
+              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="area">
-              Area (in Sq. Ft) <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="area" className="text-gray-800 font-semibold text-base">
+              Area (in Sq. Ft) <span className="text-red-500">*</span>
             </Label>
             <Input
               id="area"
               type="number"
               placeholder="Enter Area"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.area || ""}
               onChange={(e) => setData({ ...data, area: e.target.value })}
+              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="land-use">
-              Land Use Type <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="land-use" className="text-gray-800 font-semibold text-base">
+              Land Use Type <span className="text-red-500">*</span>
             </Label>
-            <Select value={data.landUse} onValueChange={(value) => setData({ ...data, landUse: value })}>
-              <SelectTrigger>
+            <Select value={data.landUse} onValueChange={(value) => setData({ ...data, landUse: value })} required>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="residential">Residential</SelectItem>
                 <SelectItem value="commercial">Commercial</SelectItem>
                 <SelectItem value="agricultural">Agricultural</SelectItem>
@@ -410,22 +458,23 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
       </div>
 
       {/* Insurance Details */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">Insurance Details</h2>
+      <div className={`border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm ${secIndex === 0 ? 'bg-white' : 'bg-blue-50 border-blue-200'}`}>
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Insurance Details</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="insurance-company">
-              Insurance Company <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="insurance-company" className="text-gray-800 font-semibold text-base">
+              Insurance Company <span className="text-red-500">*</span>
             </Label>
             <Select
               value={data.insuranceCompany}
               onValueChange={(value) => setData({ ...data, insuranceCompany: value })}
+              required
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="bil">Bhutan Insurance Limited</SelectItem>
                 <SelectItem value="rigc">Royal Insurance Corporation</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
@@ -433,76 +482,97 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="policy-no">
-              Policy No. <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="policy-no" className="text-gray-800 font-semibold text-base">
+              Policy No. <span className="text-red-500">*</span>
             </Label>
             <Input
               id="policy-no"
               placeholder="Enter Policy No"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.policyNo || ""}
               onChange={(e) => setData({ ...data, policyNo: e.target.value })}
+              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="insurance-value">
-              Insurance Value (Nu.) <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="insurance-value" className="text-gray-800 font-semibold text-base">
+              Insurance Value (Nu.) <span className="text-red-500">*</span>
             </Label>
             <Input
               id="insurance-value"
               type="number"
               placeholder="Enter Insurance Value"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.insuranceValue || ""}
               onChange={(e) => setData({ ...data, insuranceValue: e.target.value })}
+              required
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="insurance-start">
-              Insurance Start Date <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="insurance-start" className="text-gray-800 font-semibold text-base">
+              Insurance Start Date <span className="text-red-500">*</span>
             </Label>
             <Input
               id="insurance-start"
               type="date"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.insuranceStartDate || ""}
               onChange={(e) => setData({ ...data, insuranceStartDate: e.target.value })}
+              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="insurance-expiry">
-              Insurance Expiry Date <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="insurance-expiry" className="text-gray-800 font-semibold text-base">
+              Insurance Expiry Date <span className="text-red-500">*</span>
             </Label>
             <Input
               id="insurance-expiry"
               type="date"
+              min={today}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.insuranceExpiryDate || ""}
               onChange={(e) => setData({ ...data, insuranceExpiryDate: e.target.value })}
+              required
             />
           </div>
         </div>
       </div>
+
+      {/* Add Securities Button - shown after each security */}
+      {secIndex === securities.length - 1 && (
+        <div className="flex justify-center pt-4">
+          <Button type="button" size="lg" className="min-w-40 px-10 py-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all bg-[#003DA5] hover:bg-[#002D7A]" onClick={addSecurity}>
+            + Add Securities
+          </Button>
+        </div>
+      )}
       </div>
       ))}
 
+      {/* Guarantor sections - only show if ownership type is "third-party" */}
+      {data.ownershipType === 'third-party' && (
+      <>
       {/* First Guarantor */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">Guarantor 1</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Guarantor 1</h2>
 
         {/* Row 1: Salutation, Name, Nationality, ID Type */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="salutation">
-              Salutation <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="salutation" className="text-gray-800 font-semibold text-base">
+              Salutation <span className="text-red-500">*</span>
             </Label>
-            <Select value={data.salutation} onValueChange={(value) => setData({ ...data, salutation: value })}>
-              <SelectTrigger>
+            <Select value={data.salutation} onValueChange={(value) => setData({ ...data, salutation: value })} required>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="mr">Mr.</SelectItem>
                 <SelectItem value="mrs">Mrs.</SelectItem>
                 <SelectItem value="ms">Ms.</SelectItem>
@@ -511,27 +581,29 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-borrower-name">
-              Guarantor Name <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="co-borrower-name" className="text-gray-800 font-semibold text-base">
+              Guarantor Name <span className="text-red-500">*</span>
             </Label>
             <Input
               id="co-borrower-name"
               placeholder="Enter Full Name"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.coBorrowerName || ""}
               onChange={(e) => setData({ ...data, coBorrowerName: e.target.value })}
+              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="nationality">
-              Nationality <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="nationality" className="text-gray-800 font-semibold text-base">
+              Nationality <span className="text-red-500">*</span>
             </Label>
-            <Select value={data.nationality} onValueChange={(value) => setData({ ...data, nationality: value })}>
-              <SelectTrigger>
+            <Select value={data.nationality} onValueChange={(value) => setData({ ...data, nationality: value })} required>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {nationalityOptions.length > 0 ? (
                   nationalityOptions.map((option, index) => {
                     const key = option.nationality_pk_code || option.id || `nationality-${index}`
@@ -550,15 +622,15 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="id-type">
-              Identification Type <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="id-type" className="text-gray-800 font-semibold text-base">
+              Identification Type <span className="text-red-500">*</span>
             </Label>
-            <Select value={data.idType} onValueChange={(value) => setData({ ...data, idType: value })}>
-              <SelectTrigger>
+            <Select value={data.idType} onValueChange={(value) => setData({ ...data, idType: value })} required>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {identificationTypeOptions.length > 0 ? (
                   identificationTypeOptions.map((option, index) => {
                     const key = option.identity_type_pk_code || option.id || `id-${index}`
@@ -580,76 +652,88 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
 
         {/* Row 2: ID Number, Issue Date, Expiry Date, DOB */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="id-number">
-              Identification No. <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="id-number" className="text-gray-800 font-semibold text-base">
+              Identification No. <span className="text-red-500">*</span>
             </Label>
             <Input
               id="id-number"
               placeholder="Enter ID Number"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.idNumber || ""}
               onChange={(e) => setData({ ...data, idNumber: e.target.value })}
+              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="id-issue-date">
-              Issue Date <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="id-issue-date" className="text-gray-800 font-semibold text-base">
+              Issue Date <span className="text-red-500">*</span>
             </Label>
             <Input
               id="id-issue-date"
               type="date"
+              max={today}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.idIssueDate || ""}
               onChange={(e) => setData({ ...data, idIssueDate: e.target.value })}
+              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="id-expiry-date">
-              Expiry Date <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="id-expiry-date" className="text-gray-800 font-semibold text-base">
+              Expiry Date <span className="text-red-500">*</span>
             </Label>
             <Input
               id="id-expiry-date"
               type="date"
+              min={today}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.idExpiryDate || ""}
               onChange={(e) => setData({ ...data, idExpiryDate: e.target.value })}
+              required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="dob">
-              Date of Birth <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="dob" className="text-gray-800 font-semibold text-base">
+              Date of Birth <span className="text-red-500">*</span>
             </Label>
             <Input
               id="dob"
               type="date"
+              max={maxDobDate}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.dateOfBirth || ""}
               onChange={(e) => setData({ ...data, dateOfBirth: e.target.value })}
+              required
             />
           </div>
         </div>
 
         {/* Row 3: TPN, Marital Status, Gender, Spouse Name */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="tpn-no">TPN No</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="tpn-no" className="text-gray-800 font-semibold text-base">TPN No</Label>
             <Input
               id="tpn-no"
               placeholder="Enter TPN Number"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.tpnNo || ""}
               onChange={(e) => setData({ ...data, tpnNo: e.target.value })}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="marital-status">
-              Marital Status <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="marital-status" className="text-gray-800 font-semibold text-base">
+              Marital Status <span className="text-red-500">*</span>
             </Label>
-            <Select value={data.maritalStatus} onValueChange={(value) => setData({ ...data, maritalStatus: value })}>
-              <SelectTrigger>
+            <Select value={data.maritalStatus} onValueChange={(value) => setData({ ...data, maritalStatus: value })} required>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {maritalStatusOptions.length > 0 ? (
                   maritalStatusOptions.map((option, index) => {
                     const key = option.marital_status_pk_code || option.id || `marital-${index}`
@@ -668,15 +752,15 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="gender">
-              Gender <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="gender" className="text-gray-800 font-semibold text-base">
+              Gender <span className="text-red-500">*</span>
             </Label>
-            <Select value={data.gender} onValueChange={(value) => setData({ ...data, gender: value })}>
-              <SelectTrigger>
+            <Select value={data.gender} onValueChange={(value) => setData({ ...data, gender: value })} required>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="male">Male</SelectItem>
                 <SelectItem value="female">Female</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
@@ -684,11 +768,12 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="spouse-name">Spouse Name</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="spouse-name" className="text-gray-800 font-semibold text-base">Spouse Name</Label>
             <Input
               id="spouse-name"
               placeholder="Enter Spouse Name"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.spouseName || ""}
               onChange={(e) => setData({ ...data, spouseName: e.target.value })}
             />
@@ -697,52 +782,67 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
 
         {/* Row 4: Spouse CID, Spouse Contact, Family Tree Upload */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="spouse-cid">Spouse CID No</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="spouse-cid" className="text-gray-800 font-semibold text-base">Spouse CID No</Label>
             <Input
               id="spouse-cid"
               placeholder="Enter Spouse CID"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.spouseCid || ""}
               onChange={(e) => setData({ ...data, spouseCid: e.target.value })}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="spouse-contact">Spouse Contact No</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="spouse-contact" className="text-gray-800 font-semibold text-base">Spouse Contact No</Label>
             <Input
               id="spouse-contact"
               placeholder="Enter Contact Number"
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               value={data.spouseContact || ""}
               onChange={(e) => setData({ ...data, spouseContact: e.target.value })}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="family-tree">Upload Family Tree</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="family-tree" className="text-gray-800 font-semibold text-base">Upload Family Tree</Label>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" className="w-28 bg-transparent">
+              <input
+                id="family-tree-input"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                className="hidden"
+                onChange={(e) => handleFileChange('familyTree', e.target.files?.[0] || null)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('family-tree-input')?.click()}
+                className="h-12 w-32 bg-white border-gray-300 hover:bg-gray-50 hover:border-[#FF9800]"
+              >
                 Choose File
               </Button>
-              <span className="text-sm text-muted-foreground">No file chosen</span>
+              <span className="text-sm text-gray-600">{data.familyTree || 'No file chosen'}</span>
             </div>
+            {errors.familyTree && <p className="text-xs text-red-500 mt-1">{errors.familyTree}</p>}
           </div>
         </div>
       </div>
 
       {/* Permanent Address */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">Permanent Address</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Permanent Address</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="perm-country">
-              Country <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="perm-country" className="text-gray-800 font-semibold text-base">
+              Country <span className="text-red-500">*</span>
             </Label>
-            <Select value={data.permCountry} onValueChange={(value) => setData({ ...data, permCountry: value })}>
-              <SelectTrigger>
+            <Select value={data.permCountry} onValueChange={(value) => setData({ ...data, permCountry: value })} required>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="Select Country" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {countryOptions.length > 0 ? (
                   countryOptions.map((option, index) => {
                     const key = option.country_pk_code || option.id || `perm-country-${index}`
@@ -761,9 +861,9 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="perm-dzongkhag">
-              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Dzongkhag' : 'State'} <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="perm-dzongkhag" className="text-gray-800 font-semibold text-base">
+              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Dzongkhag' : 'State'} <span className="text-red-500">*</span>
             </Label>
             {data.permCountry && !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
               <Input
@@ -771,6 +871,7 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
                 placeholder="Enter State"
                 value={data.permDzongkhag || ""}
                 onChange={(e) => setData({ ...data, permDzongkhag: e.target.value })}
+                className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               />
             ) : (
             <Select 
@@ -778,10 +879,10 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
               onValueChange={(value) => setData({ ...data, permDzongkhag: value })}
               disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="Select Dzongkhag" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {dzongkhagOptions.length > 0 ? (
                   dzongkhagOptions.map((option, index) => {
                     const key = option.dzongkhag_pk_code || option.id || `perm-dzo-${index}`
@@ -801,9 +902,9 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="perm-gewog">
-              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Gewog' : 'Province'} <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="perm-gewog" className="text-gray-800 font-semibold text-base">
+              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Gewog' : 'Province'} <span className="text-red-500">*</span>
             </Label>
             {data.permCountry && !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
               <Input
@@ -811,6 +912,7 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
                 placeholder="Enter Province"
                 value={data.permGewog || ""}
                 onChange={(e) => setData({ ...data, permGewog: e.target.value })}
+                className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               />
             ) : (
             <Select 
@@ -818,10 +920,10 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
               onValueChange={(value) => setData({ ...data, permGewog: value })}
               disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="Select Gewog" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {permGewogOptions.length > 0 ? (
                   permGewogOptions.map((option, index) => {
                     const key = option.gewog_pk_code || option.id || `perm-gewog-${index}`
@@ -843,9 +945,9 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="perm-village">
-              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Village/Street' : 'Street'} <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="perm-village" className="text-gray-800 font-semibold text-base">
+              {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Village/Street' : 'Street'} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="perm-village"
@@ -853,31 +955,34 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
               value={data.permVillage || ""}
               onChange={(e) => setData({ ...data, permVillage: e.target.value })}
               disabled={!data.permCountry}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
             />
           </div>
 
           {/* Thram and House fields - only for Bhutan */}
           {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) && (
           <>
-          <div className="space-y-2">
-            <Label htmlFor="perm-thram">Thram No</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="perm-thram" className="text-gray-800 font-semibold text-base">Thram No</Label>
             <Input
               id="perm-thram"
               placeholder="Enter Thram No"
               value={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.permThram || ""}
               onChange={(e) => setData({ ...data, permThram: e.target.value })}
               disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="perm-house">House No</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="perm-house" className="text-gray-800 font-semibold text-base">House No</Label>
             <Input
               id="perm-house"
               placeholder="Enter House No"
               value={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.permHouse || ""}
               onChange={(e) => setData({ ...data, permHouse: e.target.value })}
               disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
             />
           </div>
           </>
@@ -885,9 +990,9 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
         </div>
 
         {data.permCountry && !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) && (
-          <div className="space-y-2 mt-4">
-            <Label htmlFor="perm-address-proof">
-              Upload Address Proof Document <span className="text-destructive">*</span>
+          <div className="space-y-2.5 mt-4">
+            <Label htmlFor="perm-address-proof" className="text-gray-800 font-semibold text-base">
+              Upload Address Proof Document <span className="text-red-500">*</span>
             </Label>
             <div className="flex items-center gap-2">
               <Button type="button" variant="outline" size="sm" className="w-28 bg-transparent">
@@ -901,19 +1006,19 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
       </div>
 
       {/* Current/Residential Address */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">Current/Residential Address</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Current/Residential Address</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="curr-country">
-              Country <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="curr-country" className="text-gray-800 font-semibold text-base">
+              Country <span className="text-red-500">*</span>
             </Label>
             <Select value={data.currCountry} onValueChange={(value) => setData({ ...data, currCountry: value })}>
-              <SelectTrigger>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="Select Country" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {countryOptions.length > 0 ? (
                   countryOptions.map((option, index) => {
                     const key = option.country_pk_code || option.id || `curr-country-${index}`
@@ -932,9 +1037,9 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="curr-dzongkhag">
-              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Dzongkhag' : 'State'} <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="curr-dzongkhag" className="text-gray-800 font-semibold text-base">
+              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Dzongkhag' : 'State'} <span className="text-red-500">*</span>
             </Label>
             {data.currCountry && !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
               <Input
@@ -942,6 +1047,7 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
                 placeholder="Enter State"
                 value={data.currDzongkhag || ""}
                 onChange={(e) => setData({ ...data, currDzongkhag: e.target.value })}
+                className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               />
             ) : (
             <Select 
@@ -949,10 +1055,10 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
               onValueChange={(value) => setData({ ...data, currDzongkhag: value })}
               disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="Select Dzongkhag" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {dzongkhagOptions.length > 0 ? (
                   dzongkhagOptions.map((option, index) => {
                     const key = option.dzongkhag_pk_code || option.id || `curr-dzo-${index}`
@@ -972,9 +1078,9 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="curr-gewog">
-              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Gewog' : 'Province'} <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="curr-gewog" className="text-gray-800 font-semibold text-base">
+              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Gewog' : 'Province'} <span className="text-red-500">*</span>
             </Label>
             {data.currCountry && !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
               <Input
@@ -982,6 +1088,7 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
                 placeholder="Enter Province"
                 value={data.currGewog || ""}
                 onChange={(e) => setData({ ...data, currGewog: e.target.value })}
+                className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
               />
             ) : (
             <Select 
@@ -989,10 +1096,10 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
               onValueChange={(value) => setData({ ...data, currGewog: value })}
               disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
                 <SelectValue placeholder="Select Gewog" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 {currGewogOptions.length > 0 ? (
                   currGewogOptions.map((option, index) => {
                     const key = option.gewog_pk_code || option.id || `curr-gewog-${index}`
@@ -1014,9 +1121,9 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="curr-village">
-              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Village/Street' : 'Street'} <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="curr-village" className="text-gray-800 font-semibold text-base">
+              {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Village/Street' : 'Street'} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="curr-village"
@@ -1024,23 +1131,25 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
               value={data.currVillage || ""}
               onChange={(e) => setData({ ...data, currVillage: e.target.value })}
               disabled={!data.currCountry}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="curr-house">House/Flat No</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="curr-house" className="text-gray-800 font-semibold text-base">House/Flat No</Label>
             <Input
               id="curr-house"
               placeholder="Enter House/Flat No"
               value={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.currHouse || ""}
               onChange={(e) => setData({ ...data, currHouse: e.target.value })}
               disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">
-              Email Address <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="email" className="text-gray-800 font-semibold text-base">
+              Email Address <span className="text-red-500">*</span>
             </Label>
             <Input
               id="email"
@@ -1048,28 +1157,30 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
               placeholder="Enter Email Address"
               value={data.email || ""}
               onChange={(e) => setData({ ...data, email: e.target.value })}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="contact">
-              Contact Number <span className="text-destructive">*</span>
+          <div className="space-y-2.5">
+            <Label htmlFor="contact" className="text-gray-800 font-semibold text-base">
+              Contact Number <span className="text-red-500">*</span>
             </Label>
             <Input
               id="contact"
               placeholder="Enter Contact Number"
               value={data.contact || ""}
               onChange={(e) => setData({ ...data, contact: e.target.value })}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
             />
           </div>
         </div>
 
         {data.currCountry && !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) && (
-          <div className="space-y-2 mt-4">
-            <Label htmlFor="curr-address-proof">
-              Upload Address Proof Document <span className="text-destructive">*</span>
+          <div className="space-y-2.5 mt-4">
+            <Label htmlFor="curr-address-proof" className="text-gray-800 font-semibold text-base">
+              Upload Address Proof Document <span className="text-red-500">*</span>
             </Label>
             <div className="flex items-center gap-2">
               <Button type="button" variant="outline" size="sm" className="w-28 bg-transparent">
@@ -1083,304 +1194,712 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
       </div>
 
       {/* PEP Declaration */}
-      <div className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-[#003DA5] border-b pb-4">PEP Declaration</h2>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">PEP Declaration</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="is-pep">
-              Politically Exposed Person? <span className="text-destructive">*</span>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="is-pep" className="text-gray-800 font-semibold text-base">
+              Politically Exposed Person <span className="text-red-500">*</span>
             </Label>
             <Select value={data.isPep} onValueChange={(value) => setData({ ...data, isPep: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select" />
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="yes">Yes</SelectItem>
                 <SelectItem value="no">No</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="pep-category">PEP Category</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="pep-sub-category" className="text-gray-800 font-semibold text-base">
+              PEP Sub Category <span className="text-red-500">*</span>
+            </Label>
             <Select 
-              value={data.isPep === 'yes' ? data.pepCategory : ''} 
-              onValueChange={(value) => setData({ ...data, pepCategory: value })}
+              value={data.isPep === 'yes' ? data.pepSubCategory : ''} 
+              onValueChange={(value) => setData({ ...data, pepSubCategory: value })}
               disabled={data.isPep !== 'yes'}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Category" />
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="domestic">Domestic PEP</SelectItem>
-                <SelectItem value="foreign">Foreign PEP</SelectItem>
-                <SelectItem value="international">International Organization PEP</SelectItem>
+              <SelectContent sideOffset={4}>
+                <SelectItem value="head-of-state">Head of State/Government</SelectItem>
+                <SelectItem value="senior-politician">Senior Politician</SelectItem>
+                <SelectItem value="senior-government">Senior Government Official</SelectItem>
+                <SelectItem value="judicial">Senior Judicial Official</SelectItem>
+                <SelectItem value="military">Senior Military Official</SelectItem>
+                <SelectItem value="state-enterprise">Senior State Enterprise Executive</SelectItem>
+                <SelectItem value="political-party">Political Party Official</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="pep-sub-category">PEP Sub Category</Label>
-            <Input
-              id="pep-sub-category"
-              placeholder="Enter Sub Category"
-              value={data.isPep === 'yes' ? data.pepSubCategory || "" : ''}
-              onChange={(e) => setData({ ...data, pepSubCategory: e.target.value })}
-              disabled={data.isPep !== 'yes'}
-            />
+          <div className="space-y-2.5">
+            <Label htmlFor="related-to-pep" className="text-gray-800 font-semibold text-base">
+              Are you related to any PEP? <span className="text-red-500">*</span>
+            </Label>
+            <Select 
+              value={data.isPep === 'no' ? data.relatedToPep : ''} 
+              onValueChange={(value) => setData({ ...data, relatedToPep: value })}
+              disabled={data.isPep !== 'no'}
+            >
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                <SelectValue placeholder="[Select]" />
+              </SelectTrigger>
+              <SelectContent sideOffset={4}>
+                <SelectItem value="yes">Yes</SelectItem>
+                <SelectItem value="no">No</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="pep-relationship">Relationship</Label>
-            <Input
-              id="pep-relationship"
-              placeholder="Enter Relationship"
-              value={data.isPep === 'yes' ? data.pepRelationship || "" : ''}
-              onChange={(e) => setData({ ...data, pepRelationship: e.target.value })}
-              disabled={data.isPep !== 'yes'}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="related-to-pep">Is he/she related to any PEP?</Label>
-            <Select 
-              value={data.isPep === 'yes' ? data.relatedToPep : ''} 
-              onValueChange={(value) => setData({ ...data, relatedToPep: value })}
-              disabled={data.isPep !== 'yes'}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="pep-relationship" className="text-gray-800 font-semibold text-base">
+              Relationship <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={data.isPep === 'no' && data.relatedToPep === 'yes' ? data.pepRelationship : ''}
+              onValueChange={(value) => setData({ ...data, pepRelationship: value })}
+              disabled={data.isPep !== 'no' || data.relatedToPep !== 'yes'}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select" />
+              <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                <SelectValue placeholder="[Select]" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="yes">Yes</SelectItem>
-                <SelectItem value="no">No</SelectItem>
+              <SelectContent sideOffset={4}>
+                <SelectItem value="spouse">Spouse</SelectItem>
+                <SelectItem value="parent">Parent</SelectItem>
+                <SelectItem value="sibling">Sibling</SelectItem>
+                <SelectItem value="child">Child</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="pep-id-no">Identification No.</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="pep-id-no" className="text-gray-800 font-semibold text-base">
+              Identification No. <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="pep-id-no"
-              placeholder="Enter ID Number"
-              value={data.isPep === 'yes' ? data.pepIdNo || "" : ''}
+              placeholder="Enter Identification No"
+              value={data.isPep === 'no' && data.relatedToPep === 'yes' ? data.pepIdNo || "" : ''}
               onChange={(e) => setData({ ...data, pepIdNo: e.target.value })}
-              disabled={data.isPep !== 'yes'}
+              disabled={data.isPep !== 'no' || data.relatedToPep !== 'yes'}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
+            />
+          </div>
+
+          <div className="space-y-2.5">
+            <Label htmlFor="pep-category" className="text-gray-800 font-semibold text-base">
+              PEP Category <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="pep-category"
+              placeholder="Enter Full Name"
+              value={data.isPep === 'no' && data.relatedToPep === 'yes' ? data.pepCategory || "" : ''}
+              onChange={(e) => setData({ ...data, pepCategory: e.target.value })}
+              disabled={data.isPep !== 'no' || data.relatedToPep !== 'yes'}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
+            />
+          </div>
+
+          <div className="space-y-2.5">
+            <Label htmlFor="pep-sub-cat-2" className="text-gray-800 font-semibold text-base">
+              PEP Sub Category <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="pep-sub-cat-2"
+              placeholder="Enter Full Name"
+              value={data.isPep === 'no' && data.relatedToPep === 'yes' ? data.pepSubCat2 || "" : ''}
+              onChange={(e) => setData({ ...data, pepSubCat2: e.target.value })}
+              disabled={data.isPep !== 'no' || data.relatedToPep !== 'yes'}
+              className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="pep-upload">Upload Identification Proof</Label>
-            <div className="flex items-center gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
-                className="w-28 bg-transparent"
-                disabled={data.isPep !== 'yes'}
-              >
-                Choose File
-              </Button>
-              <span className="text-sm text-muted-foreground">No file chosen</span>
-            </div>
+        <div className="space-y-2.5">
+          <Label htmlFor="pep-upload" className="text-gray-800 font-semibold text-base">
+            Upload Identification Proof <span className="text-red-500">*</span>
+          </Label>
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              id="pep-upload"
+              className="hidden"
+              accept=".pdf,.jpg,.jpeg,.png"
+              disabled={data.isPep !== 'no' || data.relatedToPep !== 'yes'}
+            />
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              className="w-28 bg-transparent"
+              onClick={() => document.getElementById('pep-upload')?.click()}
+              disabled={data.isPep !== 'no' || data.relatedToPep !== 'yes'}
+            >
+              Choose File
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {data.isPep === 'no' && data.relatedToPep === 'yes' ? (data.pepUpload || 'No file chosen') : 'No file chosen'}
+            </span>
           </div>
         </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex justify-center gap-6 pt-4">
-        <Button type="button" size="lg" className="min-w-40 px-10 py-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all bg-[#003DA5] hover:bg-[#002D7A]" onClick={addGuarantor}>
-          + Add Guarantor
-        </Button>
-        <Button type="button" size="lg" className="min-w-40 px-10 py-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all bg-[#003DA5] hover:bg-[#002D7A]" onClick={addSecurity}>
-          + Add Securities
-        </Button>
       </div>
 
       {/* Additional Guarantors */}
       {guarantors.slice(1).map((guarantor, index) => (
-        <div key={index + 1} className="bg-card border rounded-lg p-8 space-y-8 shadow-sm">
-          <div className="flex justify-between items-center border-b pb-4">
-            <h2 className="text-2xl font-semibold text-[#003DA5]">Guarantor {index + 2}</h2>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={() => removeGuarantor(index + 1)}
-            >
-              Remove
-            </Button>
+        <div key={index + 1} className="space-y-8">
+          {/* Guarantor Details */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 space-y-8 shadow-sm">
+            <div className="flex justify-between items-center border-b border-gray-200 pb-4">
+              <h2 className="text-2xl font-bold text-[#003DA5]">Guarantor {index + 2}</h2>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => removeGuarantor(index + 1)}
+              >
+                Remove
+              </Button>
+            </div>
+
+            {/* Row 1: Salutation, Name, Nationality, ID Type */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor={`salutation-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Salutation <span className="text-red-500">*</span>
+                </Label>
+                <Select>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    <SelectItem value="mr">Mr.</SelectItem>
+                    <SelectItem value="mrs">Mrs.</SelectItem>
+                    <SelectItem value="ms">Ms.</SelectItem>
+                    <SelectItem value="dr">Dr.</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`guarantor-name-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Guarantor Name <span className="text-red-500">*</span>
+                </Label>
+                <Input placeholder="Enter Full Name" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`nationality-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Nationality <span className="text-red-500">*</span>
+                </Label>
+                <Select>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    {nationalityOptions.length > 0 ? (
+                      nationalityOptions.map((option, idx) => (
+                        <SelectItem key={idx} value={String(option.nationality_pk_code || idx)}>
+                          {option.nationality || option.name || 'Unknown'}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`id-type-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Identification Type <span className="text-red-500">*</span>
+                </Label>
+                <Select>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    {identificationTypeOptions.length > 0 ? (
+                      identificationTypeOptions.map((option, idx) => (
+                        <SelectItem key={idx} value={String(option.identification_type_pk_code || idx)}>
+                          {option.identification_type || option.name || 'Unknown'}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Row 2: ID Number, Issue Date, Expiry Date, DOB */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor={`id-number-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Identification No. <span className="text-red-500">*</span>
+                </Label>
+                <Input placeholder="Enter ID Number" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`id-issue-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Issue Date <span className="text-red-500">*</span>
+                </Label>
+                <Input type="date" max={today} className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`id-expiry-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Expiry Date <span className="text-red-500">*</span>
+                </Label>
+                <Input type="date" min={today} className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`dob-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Date of Birth <span className="text-red-500">*</span>
+                </Label>
+                <Input type="date" max={maxDobDate} className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
+            </div>
+
+            {/* Row 3: TPN, Marital Status, Gender, Spouse Name */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor={`tpn-${index + 1}`} className="text-gray-800 font-semibold text-base">TPN No</Label>
+                <Input placeholder="Enter TPN Number" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`marital-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Marital Status <span className="text-red-500">*</span>
+                </Label>
+                <Select>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    {maritalStatusOptions.length > 0 ? (
+                      maritalStatusOptions.map((option, idx) => (
+                        <SelectItem key={idx} value={String(option.marital_status_pk_code || idx)}>
+                          {option.marital_status || option.name || 'Unknown'}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`gender-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Gender <span className="text-red-500">*</span>
+                </Label>
+                <Select>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`spouse-name-${index + 1}`} className="text-gray-800 font-semibold text-base">Spouse Name</Label>
+                <Input placeholder="Enter Spouse Name" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
+            </div>
+
+            {/* Row 4: Spouse CID, Spouse Contact, Family Tree Upload */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor={`spouse-cid-${index + 1}`} className="text-gray-800 font-semibold text-base">Spouse CID No</Label>
+                <Input placeholder="Enter Spouse CID" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`spouse-contact-${index + 1}`} className="text-gray-800 font-semibold text-base">Spouse Contact No</Label>
+                <Input placeholder="Enter Contact Number" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`family-tree-${index + 1}`} className="text-gray-800 font-semibold text-base">Upload Family Tree</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id={`family-tree-input-${index + 1}`}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById(`family-tree-input-${index + 1}`)?.click()}
+                    className="h-12 w-32 bg-white border-gray-300 hover:bg-gray-50 hover:border-[#FF9800]"
+                  >
+                    Choose File
+                  </Button>
+                  <span className="text-sm text-gray-600">No file chosen</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Row 1: Salutation, Name, Nationality, ID Type */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor={`salutation-${index + 1}`}>
-                Salutation <span className="text-destructive">*</span>
-              </Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="mr">Mr.</SelectItem>
-                  <SelectItem value="mrs">Mrs.</SelectItem>
-                  <SelectItem value="ms">Ms.</SelectItem>
-                  <SelectItem value="dr">Dr.</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Permanent Address for Additional Guarantor */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 space-y-8 shadow-sm">
+            <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Permanent Address - Guarantor {index + 2}</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor={`perm-country-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Country <span className="text-red-500">*</span>
+                </Label>
+                <Select>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="Select Country" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    {countryOptions.length > 0 ? (
+                      countryOptions.map((option, idx) => (
+                        <SelectItem key={idx} value={String(option.country_pk_code || idx)}>
+                          {option.country || option.name || 'Unknown'}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`perm-dzongkhag-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Dzongkhag/State <span className="text-red-500">*</span>
+                </Label>
+                <Select>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    {dzongkhagOptions.length > 0 ? (
+                      dzongkhagOptions.map((option, idx) => (
+                        <SelectItem key={idx} value={String(option.dzongkhag_pk_code || idx)}>
+                          {option.dzongkhag || option.name || 'Unknown'}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`perm-gewog-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Gewog/Province <span className="text-red-500">*</span>
+                </Label>
+                <Select>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    <SelectItem value="loading" disabled>Select Dzongkhag first</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor={`guarantor-name-${index + 1}`}>
-                Guarantor Name <span className="text-destructive">*</span>
-              </Label>
-              <Input placeholder="Enter Full Name" />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor={`perm-village-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Village/Street <span className="text-red-500">*</span>
+                </Label>
+                <Input placeholder="Enter Village/Street" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor={`nationality-${index + 1}`}>
-                Nationality <span className="text-destructive">*</span>
-              </Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bhutanese">Bhutanese</SelectItem>
-                  <SelectItem value="indian">Indian</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2.5">
+                <Label htmlFor={`perm-thram-${index + 1}`} className="text-gray-800 font-semibold text-base">Thram No</Label>
+                <Input placeholder="Enter Thram No" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor={`id-type-${index + 1}`}>
-                Identification Type <span className="text-destructive">*</span>
-              </Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cid">CID</SelectItem>
-                  <SelectItem value="passport">Passport</SelectItem>
-                  <SelectItem value="work-permit">Work Permit</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Row 2: ID Number, Issue Date, Expiry Date, DOB */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor={`id-number-${index + 1}`}>
-                Identification No. <span className="text-destructive">*</span>
-              </Label>
-              <Input placeholder="Enter ID Number" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`id-issue-${index + 1}`}>
-                Issue Date <span className="text-destructive">*</span>
-              </Label>
-              <Input type="date" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`id-expiry-${index + 1}`}>
-                Expiry Date <span className="text-destructive">*</span>
-              </Label>
-              <Input type="date" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`dob-${index + 1}`}>
-                Date of Birth <span className="text-destructive">*</span>
-              </Label>
-              <Input type="date" />
+              <div className="space-y-2.5">
+                <Label htmlFor={`perm-house-${index + 1}`} className="text-gray-800 font-semibold text-base">House No</Label>
+                <Input placeholder="Enter House No" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
             </div>
           </div>
 
-          {/* Row 3: TPN, Marital Status, Gender, Spouse Name */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor={`tpn-${index + 1}`}>TPN No</Label>
-              <Input placeholder="Enter TPN Number" />
+          {/* Current/Residential Address for Additional Guarantor */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 space-y-8 shadow-sm">
+            <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Current/Residential Address - Guarantor {index + 2}</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor={`curr-country-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Country <span className="text-red-500">*</span>
+                </Label>
+                <Select>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="Select Country" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    {countryOptions.length > 0 ? (
+                      countryOptions.map((option, idx) => (
+                        <SelectItem key={idx} value={String(option.country_pk_code || idx)}>
+                          {option.country || option.name || 'Unknown'}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`curr-dzongkhag-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Dzongkhag/State <span className="text-red-500">*</span>
+                </Label>
+                <Select>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    {dzongkhagOptions.length > 0 ? (
+                      dzongkhagOptions.map((option, idx) => (
+                        <SelectItem key={idx} value={String(option.dzongkhag_pk_code || idx)}>
+                          {option.dzongkhag || option.name || 'Unknown'}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`curr-gewog-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Gewog/Province <span className="text-red-500">*</span>
+                </Label>
+                <Select>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    <SelectItem value="loading" disabled>Select Dzongkhag first</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor={`marital-${index + 1}`}>
-                Marital Status <span className="text-destructive">*</span>
-              </Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="married">Married</SelectItem>
-                  <SelectItem value="divorced">Divorced</SelectItem>
-                  <SelectItem value="widowed">Widowed</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor={`curr-village-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Village/Street <span className="text-red-500">*</span>
+                </Label>
+                <Input placeholder="Enter Village/Street" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`curr-house-${index + 1}`} className="text-gray-800 font-semibold text-base">House/Flat No</Label>
+                <Input placeholder="Enter House/Flat No" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`email-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Email Address <span className="text-red-500">*</span>
+                </Label>
+                <Input type="email" placeholder="Enter Email Address" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor={`gender-${index + 1}`}>
-                Gender <span className="text-destructive">*</span>
-              </Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`spouse-name-${index + 1}`}>Spouse Name</Label>
-              <Input placeholder="Enter Spouse Name" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor={`contact-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Contact Number <span className="text-red-500">*</span>
+                </Label>
+                <Input placeholder="Enter Contact Number" className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" />
+              </div>
             </div>
           </div>
 
-          {/* Row 4: Spouse CID, Spouse Contact, Email, Phone */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor={`spouse-cid-${index + 1}`}>Spouse CID No</Label>
-              <Input placeholder="Enter Spouse CID" />
+          {/* PEP Declaration for Additional Guarantor */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 space-y-8 shadow-sm">
+            <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">PEP Declaration - Guarantor {index + 2}</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor={`is-pep-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Politically Exposed Person <span className="text-red-500">*</span>
+                </Label>
+                <Select value={guarantor.isPep || ''} onValueChange={(value) => updateGuarantor(index + 1, 'isPep', value)}>
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="[Select]" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`pep-sub-category-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  PEP Sub Category <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={guarantor.isPep === 'yes' ? guarantor.pepSubCategory || '' : ''}
+                  onValueChange={(value) => updateGuarantor(index + 1, 'pepSubCategory', value)}
+                  disabled={guarantor.isPep !== 'yes'}
+                >
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="[Select]" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    <SelectItem value="head-of-state">Head of State/Government</SelectItem>
+                    <SelectItem value="senior-politician">Senior Politician</SelectItem>
+                    <SelectItem value="senior-government">Senior Government Official</SelectItem>
+                    <SelectItem value="judicial">Senior Judicial Official</SelectItem>
+                    <SelectItem value="military">Senior Military Official</SelectItem>
+                    <SelectItem value="state-enterprise">Senior State Enterprise Executive</SelectItem>
+                    <SelectItem value="political-party">Political Party Official</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`related-to-pep-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Are you related to any PEP? <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={guarantor.isPep === 'no' ? guarantor.relatedToPep || '' : ''}
+                  onValueChange={(value) => updateGuarantor(index + 1, 'relatedToPep', value)}
+                  disabled={guarantor.isPep !== 'no'}
+                >
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="[Select]" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor={`spouse-contact-${index + 1}`}>Spouse Contact No</Label>
-              <Input placeholder="Enter Contact Number" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="space-y-2.5">
+                <Label htmlFor={`pep-relationship-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Relationship <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={guarantor.isPep === 'no' && guarantor.relatedToPep === 'yes' ? guarantor.pepRelationship || '' : ''}
+                  onValueChange={(value) => updateGuarantor(index + 1, 'pepRelationship', value)}
+                  disabled={guarantor.isPep !== 'no' || guarantor.relatedToPep !== 'yes'}
+                >
+                  <SelectTrigger className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
+                    <SelectValue placeholder="[Select]" />
+                  </SelectTrigger>
+                  <SelectContent sideOffset={4}>
+                    <SelectItem value="spouse">Spouse</SelectItem>
+                    <SelectItem value="parent">Parent</SelectItem>
+                    <SelectItem value="sibling">Sibling</SelectItem>
+                    <SelectItem value="child">Child</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`pep-id-no-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  Identification No. <span className="text-red-500">*</span>
+                </Label>
+                <Input 
+                  placeholder="Enter Identification No" 
+                  value={guarantor.isPep === 'no' && guarantor.relatedToPep === 'yes' ? guarantor.pepIdNo || '' : ''}
+                  onChange={(e) => updateGuarantor(index + 1, 'pepIdNo', e.target.value)}
+                  disabled={guarantor.isPep !== 'no' || guarantor.relatedToPep !== 'yes'}
+                  className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]" 
+                />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`pep-category-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  PEP Category <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  placeholder="Enter Full Name"
+                  value={guarantor.isPep === 'no' && guarantor.relatedToPep === 'yes' ? guarantor.pepCategory || '' : ''}
+                  onChange={(e) => updateGuarantor(index + 1, 'pepCategory', e.target.value)}
+                  disabled={guarantor.isPep !== 'no' || guarantor.relatedToPep !== 'yes'}
+                  className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
+                />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor={`pep-sub-cat-2-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                  PEP Sub Category <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  placeholder="Enter Full Name"
+                  value={guarantor.isPep === 'no' && guarantor.relatedToPep === 'yes' ? guarantor.pepSubCat2 || '' : ''}
+                  onChange={(e) => updateGuarantor(index + 1, 'pepSubCat2', e.target.value)}
+                  disabled={guarantor.isPep !== 'no' || guarantor.relatedToPep !== 'yes'}
+                  className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor={`email-${index + 1}`}>
-                Email Address <span className="text-destructive">*</span>
+            <div className="space-y-2.5">
+              <Label htmlFor={`pep-upload-${index + 1}`} className="text-gray-800 font-semibold text-base">
+                Upload Identification Proof <span className="text-red-500">*</span>
               </Label>
-              <Input type="email" placeholder="Enter Email Address" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor={`contact-${index + 1}`}>
-                Contact Number <span className="text-destructive">*</span>
-              </Label>
-              <Input placeholder="Enter Contact Number" />
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  id={`pep-upload-${index + 1}`}
+                  className="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  disabled={guarantor.isPep !== 'no' || guarantor.relatedToPep !== 'yes'}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-28 bg-transparent"
+                  onClick={() => document.getElementById(`pep-upload-${index + 1}`)?.click()}
+                  disabled={guarantor.isPep !== 'no' || guarantor.relatedToPep !== 'yes'}
+                >
+                  Choose File
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {guarantor.isPep === 'no' && guarantor.relatedToPep === 'yes' ? (guarantor.pepUpload || 'No file chosen') : 'No file chosen'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       ))}
+
+      {/* Add Guarantor Button - shown after all guarantors */}
+      <div className="flex justify-center pt-4">
+        <Button type="button" size="lg" className="min-w-40 px-10 py-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all bg-[#003DA5] hover:bg-[#002D7A]" onClick={addGuarantor}>
+          + Add Guarantor
+        </Button>
+      </div>
+      </>
+      )}
 
       <div className="flex justify-between gap-6 pt-6">
         <Button type="button" onClick={onBack} variant="secondary" size="lg" className="min-w-40 px-10 py-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
