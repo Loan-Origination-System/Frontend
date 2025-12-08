@@ -1,3 +1,5 @@
+"use client"
+
 import { Header } from "@/components/header"
 import { HeroSlider } from "@/components/hero-slider"
 import { Card, CardContent } from "@/components/ui/card"
