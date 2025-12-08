@@ -108,147 +108,158 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-10">
+    <form onSubmit={handleSubmit} className="space-y-8">
       {/* Co-Borrower Personal Information */}
-      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-6 shadow-md hover:shadow-lg transition-shadow duration-200">
         <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Co-Borrower Personal Information</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-2.5">
-            <Label htmlFor="co-salutation" className="text-gray-800 font-semibold text-sm">
+            <Label htmlFor="co-salutation" className="text-gray-800 font-semibold text-base">
               Salutation <span className="text-destructive">*</span>
             </Label>
-            <Select value={data.salutation} onValueChange={(value) => setData({ ...data, salutation: value })}>
-              <SelectTrigger className="h-11 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="mr">Mr.</SelectItem>
-                <SelectItem value="mrs">Mrs.</SelectItem>
-                <SelectItem value="ms">Ms.</SelectItem>
-                <SelectItem value="dr">Dr.</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select value={data.salutation} onValueChange={(value) => setData({ ...data, salutation: value })}>
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mr">Mr.</SelectItem>
+                  <SelectItem value="mrs">Mrs.</SelectItem>
+                  <SelectItem value="ms">Ms.</SelectItem>
+                  <SelectItem value="dr">Dr.</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-name">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-name" className="text-gray-800 font-semibold text-base">
               Co-Borrower Name <span className="text-destructive">*</span>
             </Label>
             <Input
               id="co-name"
               placeholder="Enter Full Name"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.name || ""}
               onChange={(e) => setData({ ...data, name: e.target.value })}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-nationality">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-nationality" className="text-gray-800 font-semibold text-base">
               Nationality <span className="text-destructive">*</span>
             </Label>
-            <Select value={data.nationality} onValueChange={(value) => setData({ ...data, nationality: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                {nationalityOptions.length > 0 ? (
-                  nationalityOptions.map((option, index) => {
-                    const key = option.nationality_pk_code || option.id || `nationality-${index}`
-                    const value = String(option.nationality_pk_code || option.id || index)
-                    const label = option.nationality || option.name || 'Unknown'
-                    return (
-                      <SelectItem key={key} value={value}>
-                        {label}
-                      </SelectItem>
-                    )
-                  })
-                ) : (
-                  <SelectItem value="loading" disabled>Loading...</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select value={data.nationality} onValueChange={(value) => setData({ ...data, nationality: value })}>
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  {nationalityOptions.length > 0 ? (
+                    nationalityOptions.map((option, index) => {
+                      const key = option.nationality_pk_code || option.id || `nationality-${index}`
+                      const value = String(option.nationality_pk_code || option.id || index)
+                      const label = option.nationality || option.name || 'Unknown'
+                      return (
+                        <SelectItem key={key} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    })
+                  ) : (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-identificationType">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-identificationType" className="text-gray-800 font-semibold text-base">
               Identification Type <span className="text-destructive">*</span>
             </Label>
-            <Select
-              value={data.identificationType}
-              onValueChange={(value) => setData({ ...data, identificationType: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                {identificationTypeOptions.length > 0 ? (
-                  identificationTypeOptions.map((option, index) => {
-                    const key = option.identity_type_pk_code || option.id || `id-${index}`
-                    const value = String(option.identity_type_pk_code || option.id || index)
-                    const label = option.identity_type || option.name || 'Unknown'
-                    return (
-                      <SelectItem key={key} value={value}>
-                        {label}
-                      </SelectItem>
-                    )
-                  })
-                ) : (
-                  <SelectItem value="loading" disabled>Loading...</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select
+                value={data.identificationType}
+                onValueChange={(value) => setData({ ...data, identificationType: value })}
+              >
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  {identificationTypeOptions.length > 0 ? (
+                    identificationTypeOptions.map((option, index) => {
+                      const key = option.identity_type_pk_code || option.id || `id-${index}`
+                      const value = String(option.identity_type_pk_code || option.id || index)
+                      const label = option.identity_type || option.name || 'Unknown'
+                      return (
+                        <SelectItem key={key} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    })
+                  ) : (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="co-identificationNo">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-identificationNo" className="text-gray-800 font-semibold text-base">
               Identification No. <span className="text-destructive">*</span>
             </Label>
             <Input
               id="co-identificationNo"
               placeholder="Enter identification No"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.identificationNo || ""}
               onChange={(e) => setData({ ...data, identificationNo: e.target.value })}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-identificationIssueDate">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-identificationIssueDate" className="text-gray-800 font-semibold text-base">
               Issue Date <span className="text-destructive">*</span>
             </Label>
             <Input
               type="date"
               id="co-identificationIssueDate"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.identificationIssueDate || ""}
               onChange={(e) => setData({ ...data, identificationIssueDate: e.target.value })}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-identificationExpiryDate">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-identificationExpiryDate" className="text-gray-800 font-semibold text-base">
               Expiry Date <span className="text-destructive">*</span>
             </Label>
             <Input
               type="date"
               id="co-identificationExpiryDate"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.identificationExpiryDate || ""}
               onChange={(e) => setData({ ...data, identificationExpiryDate: e.target.value })}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-dateOfBirth">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-dateOfBirth" className="text-gray-800 font-semibold text-base">
               Date of Birth <span className="text-destructive">*</span>
             </Label>
             <Input
               type="date"
               id="co-dateOfBirth"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.dateOfBirth || ""}
               onChange={(e) => setData({ ...data, dateOfBirth: e.target.value })}
               required
@@ -256,120 +267,130 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="co-tpn">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-tpn" className="text-gray-800 font-semibold text-base">
               TPN No <span className="text-destructive">*</span>
             </Label>
             <Input
               id="co-tpn"
               placeholder="Enter TPN"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.tpn || ""}
               onChange={(e) => setData({ ...data, tpn: e.target.value })}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-maritalStatus">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-maritalStatus" className="text-gray-800 font-semibold text-base">
               Marital Status <span className="text-destructive">*</span>
             </Label>
-            <Select value={data.maritalStatus} onValueChange={(value) => setData({ ...data, maritalStatus: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                {maritalStatusOptions.length > 0 ? (
-                  maritalStatusOptions.map((option, index) => {
-                    const key = option.marital_status_pk_code || option.id || `marital-${index}`
-                    const value = String(option.marital_status_pk_code || option.id || index)
-                    const label = option.marital_status || option.name || 'Unknown'
-                    return (
-                      <SelectItem key={key} value={value}>
-                        {label}
-                      </SelectItem>
-                    )
-                  })
-                ) : (
-                  <SelectItem value="loading" disabled>Loading...</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select value={data.maritalStatus} onValueChange={(value) => setData({ ...data, maritalStatus: value })}>
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  {maritalStatusOptions.length > 0 ? (
+                    maritalStatusOptions.map((option, index) => {
+                      const key = option.marital_status_pk_code || option.id || `marital-${index}`
+                      const value = String(option.marital_status_pk_code || option.id || index)
+                      const label = option.marital_status || option.name || 'Unknown'
+                      return (
+                        <SelectItem key={key} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    })
+                  ) : (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-gender">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-gender" className="text-gray-800 font-semibold text-base">
               Gender <span className="text-destructive">*</span>
             </Label>
-            <Select value={data.gender} onValueChange={(value) => setData({ ...data, gender: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="male">Male</SelectItem>
-                <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select value={data.gender} onValueChange={(value) => setData({ ...data, gender: value })}>
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-relationship">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-relationship" className="text-gray-800 font-semibold text-base">
               Relationship to Borrower <span className="text-destructive">*</span>
             </Label>
-            <Select value={data.relationship} onValueChange={(value) => setData({ ...data, relationship: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="spouse">Spouse</SelectItem>
-                <SelectItem value="parent">Parent</SelectItem>
-                <SelectItem value="sibling">Sibling</SelectItem>
-                <SelectItem value="child">Child</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select value={data.relationship} onValueChange={(value) => setData({ ...data, relationship: value })}>
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="spouse">Spouse</SelectItem>
+                  <SelectItem value="parent">Parent</SelectItem>
+                  <SelectItem value="sibling">Sibling</SelectItem>
+                  <SelectItem value="child">Child</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Contact Information */}
-      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-6 shadow-md hover:shadow-lg transition-shadow duration-200">
         <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Contact Information</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="co-email">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-email" className="text-gray-800 font-semibold text-base">
               Email Address <span className="text-destructive">*</span>
             </Label>
             <Input
               id="co-email"
               type="email"
               placeholder="Enter Email"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.email || ""}
               onChange={(e) => setData({ ...data, email: e.target.value })}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-contact">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-contact" className="text-gray-800 font-semibold text-base">
               Contact Number <span className="text-destructive">*</span>
             </Label>
             <Input
               id="co-contact"
               placeholder="Enter Contact No"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.contact || ""}
               onChange={(e) => setData({ ...data, contact: e.target.value })}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-alternateContact">Alternate Contact No</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="co-alternateContact" className="text-gray-800 font-semibold text-base">Alternate Contact No</Label>
             <Input
               id="co-alternateContact"
               placeholder="Enter Contact No"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.alternateContact || ""}
               onChange={(e) => setData({ ...data, alternateContact: e.target.value })}
             />
@@ -378,124 +399,133 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
       </div>
 
       {/* Permanent Address */}
-      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-6 shadow-md hover:shadow-lg transition-shadow duration-200">
         <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Permanent Address</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="co-permCountry">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-permCountry" className="text-gray-800 font-semibold text-base">
               Country <span className="text-destructive">*</span>
             </Label>
-            <Select value={data.permCountry} onValueChange={(value) => setData({ ...data, permCountry: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                {countryOptions.length > 0 ? (
-                  countryOptions.map((option, index) => {
-                    const key = option.country_pk_code || option.id || `perm-country-${index}`
-                    const value = String(option.country_pk_code || option.id || index)
-                    const label = option.country || option.name || 'Unknown'
-                    return (
-                      <SelectItem key={key} value={value}>
-                        {label}
-                      </SelectItem>
-                    )
-                  })
-                ) : (
-                  <SelectItem value="loading" disabled>Loading...</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select value={data.permCountry} onValueChange={(value) => setData({ ...data, permCountry: value })}>
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countryOptions.length > 0 ? (
+                    countryOptions.map((option, index) => {
+                      const key = option.country_pk_code || option.id || `perm-country-${index}`
+                      const value = String(option.country_pk_code || option.id || index)
+                      const label = option.country || option.name || 'Unknown'
+                      return (
+                        <SelectItem key={key} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    })
+                  ) : (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-permDzongkhag">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-permDzongkhag" className="text-gray-800 font-semibold text-base">
               {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Dzongkhag' : 'State'} <span className="text-destructive">*</span>
             </Label>
             {data.permCountry && !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
               <Input
                 id="co-permDzongkhag"
                 placeholder="Enter State"
+                className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 value={data.permDzongkhag || ""}
                 onChange={(e) => setData({ ...data, permDzongkhag: e.target.value })}
               />
             ) : (
-            <Select 
-              value={data.permDzongkhag || ''} 
-              onValueChange={(value) => setData({ ...data, permDzongkhag: value })}
-              disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                {dzongkhagOptions.length > 0 ? (
-                  dzongkhagOptions.map((option, index) => {
-                    const key = option.dzongkhag_pk_code || option.id || `perm-dzo-${index}`
-                    const value = String(option.dzongkhag_pk_code || option.id || index)
-                    const label = option.dzongkhag || option.name || 'Unknown'
-                    return (
-                      <SelectItem key={key} value={value}>
-                        {label}
-                      </SelectItem>
-                    )
-                  })
-                ) : (
-                  <SelectItem value="loading" disabled>Loading...</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select 
+                value={data.permDzongkhag || ''} 
+                onValueChange={(value) => setData({ ...data, permDzongkhag: value })}
+                disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
+              >
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dzongkhagOptions.length > 0 ? (
+                    dzongkhagOptions.map((option, index) => {
+                      const key = option.dzongkhag_pk_code || option.id || `perm-dzo-${index}`
+                      const value = String(option.dzongkhag_pk_code || option.id || index)
+                      const label = option.dzongkhag || option.name || 'Unknown'
+                      return (
+                        <SelectItem key={key} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    })
+                  ) : (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-permGewog">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-permGewog" className="text-gray-800 font-semibold text-base">
               {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Gewog' : 'Province'} <span className="text-destructive">*</span>
             </Label>
             {data.permCountry && !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
               <Input
                 id="co-permGewog"
                 placeholder="Enter Province"
+                className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 value={data.permGewog || ""}
                 onChange={(e) => setData({ ...data, permGewog: e.target.value })}
               />
             ) : (
-            <Select 
-              value={data.permGewog || ''} 
-              onValueChange={(value) => setData({ ...data, permGewog: value })}
-              disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                {permGewogOptions.length > 0 ? (
-                  permGewogOptions.map((option, index) => {
-                    const key = option.gewog_pk_code || option.id || `perm-gewog-${index}`
-                    const value = String(option.gewog_pk_code || option.id || index)
-                    const label = option.gewog || option.name || 'Unknown'
-                    return (
-                      <SelectItem key={key} value={value}>
-                        {label}
-                      </SelectItem>
-                    )
-                  })
-                ) : (
-                  <SelectItem value="loading" disabled>{data.permDzongkhag ? 'Loading...' : 'Select Dzongkhag first'}</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select 
+                value={data.permGewog || ''} 
+                onValueChange={(value) => setData({ ...data, permGewog: value })}
+                disabled={!data.permCountry || !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
+              >
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  {permGewogOptions.length > 0 ? (
+                    permGewogOptions.map((option, index) => {
+                      const key = option.gewog_pk_code || option.id || `perm-gewog-${index}`
+                      const value = String(option.gewog_pk_code || option.id || index)
+                      const label = option.gewog || option.name || 'Unknown'
+                      return (
+                        <SelectItem key={key} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    })
+                  ) : (
+                    <SelectItem value="loading" disabled>{data.permDzongkhag ? 'Loading...' : 'Select Dzongkhag first'}</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-permVillage">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-permVillage" className="text-gray-800 font-semibold text-base">
               {data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Village/Street' : 'Street'} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="co-permVillage"
               placeholder={data.permCountry && countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Enter Village/Street' : 'Enter Street'}
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.permVillage || ""}
               onChange={(e) => setData({ ...data, permVillage: e.target.value })}
               disabled={!data.permCountry}
@@ -504,12 +534,12 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
         </div>
 
         {data.permCountry && !countryOptions.find(c => String(c.country_pk_code) === data.permCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) && (
-          <div className="space-y-2 mt-4">
-            <Label htmlFor="co-permAddressProof">
+          <div className="space-y-2.5 mt-4">
+            <Label htmlFor="co-permAddressProof" className="text-gray-800 font-semibold text-base">
               Upload Address Proof Document <span className="text-destructive">*</span>
             </Label>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" className="w-28 bg-transparent">
+              <Button type="button" variant="outline" size="sm" className="h-12 w-32 rounded-lg bg-white hover:bg-gray-50 border-gray-300 font-medium transition-all">
                 Choose File
               </Button>
               <span className="text-sm text-muted-foreground">No file chosen</span>
@@ -520,124 +550,133 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
       </div>
 
       {/* Current Address */}
-      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-6 shadow-md hover:shadow-lg transition-shadow duration-200">
         <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Current/Residential Address</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="co-currCountry">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-currCountry" className="text-gray-800 font-semibold text-base">
               Country of Resident <span className="text-destructive">*</span>
             </Label>
-            <Select value={data.currCountry} onValueChange={(value) => setData({ ...data, currCountry: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                {countryOptions.length > 0 ? (
-                  countryOptions.map((option, index) => {
-                    const key = option.country_pk_code || option.id || `curr-country-${index}`
-                    const value = String(option.country_pk_code || option.id || index)
-                    const label = option.country || option.name || 'Unknown'
-                    return (
-                      <SelectItem key={key} value={value}>
-                        {label}
-                      </SelectItem>
-                    )
-                  })
-                ) : (
-                  <SelectItem value="loading" disabled>Loading...</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select value={data.currCountry} onValueChange={(value) => setData({ ...data, currCountry: value })}>
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countryOptions.length > 0 ? (
+                    countryOptions.map((option, index) => {
+                      const key = option.country_pk_code || option.id || `curr-country-${index}`
+                      const value = String(option.country_pk_code || option.id || index)
+                      const label = option.country || option.name || 'Unknown'
+                      return (
+                        <SelectItem key={key} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    })
+                  ) : (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-currDzongkhag">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-currDzongkhag" className="text-gray-800 font-semibold text-base">
               {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Dzongkhag' : 'State'} <span className="text-destructive">*</span>
             </Label>
             {data.currCountry && !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
               <Input
                 id="co-currDzongkhag"
                 placeholder="Enter State"
+                className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 value={data.currDzongkhag || ""}
                 onChange={(e) => setData({ ...data, currDzongkhag: e.target.value })}
               />
             ) : (
-            <Select 
-              value={data.currDzongkhag || ''} 
-              onValueChange={(value) => setData({ ...data, currDzongkhag: value })}
-              disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                {dzongkhagOptions.length > 0 ? (
-                  dzongkhagOptions.map((option, index) => {
-                    const key = option.dzongkhag_pk_code || option.id || `curr-dzo-${index}`
-                    const value = String(option.dzongkhag_pk_code || option.id || index)
-                    const label = option.dzongkhag || option.name || 'Unknown'
-                    return (
-                      <SelectItem key={key} value={value}>
-                        {label}
-                      </SelectItem>
-                    )
-                  })
-                ) : (
-                  <SelectItem value="loading" disabled>Loading...</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select 
+                value={data.currDzongkhag || ''} 
+                onValueChange={(value) => setData({ ...data, currDzongkhag: value })}
+                disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
+              >
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dzongkhagOptions.length > 0 ? (
+                    dzongkhagOptions.map((option, index) => {
+                      const key = option.dzongkhag_pk_code || option.id || `curr-dzo-${index}`
+                      const value = String(option.dzongkhag_pk_code || option.id || index)
+                      const label = option.dzongkhag || option.name || 'Unknown'
+                      return (
+                        <SelectItem key={key} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    })
+                  ) : (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-currGewog">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-currGewog" className="text-gray-800 font-semibold text-base">
               {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Gewog' : 'Province'} <span className="text-destructive">*</span>
             </Label>
             {data.currCountry && !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? (
               <Input
                 id="co-currGewog"
                 placeholder="Enter Province"
+                className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 value={data.currGewog || ""}
                 onChange={(e) => setData({ ...data, currGewog: e.target.value })}
               />
             ) : (
-            <Select 
-              value={data.currGewog || ''} 
-              onValueChange={(value) => setData({ ...data, currGewog: value })}
-              disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                {currGewogOptions.length > 0 ? (
-                  currGewogOptions.map((option, index) => {
-                    const key = option.gewog_pk_code || option.id || `curr-gewog-${index}`
-                    const value = String(option.gewog_pk_code || option.id || index)
-                    const label = option.gewog || option.name || 'Unknown'
-                    return (
-                      <SelectItem key={key} value={value}>
-                        {label}
-                      </SelectItem>
-                    )
-                  })
-                ) : (
-                  <SelectItem value="loading" disabled>{data.currDzongkhag ? 'Loading...' : 'Select Dzongkhag first'}</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select 
+                value={data.currGewog || ''} 
+                onValueChange={(value) => setData({ ...data, currGewog: value })}
+                disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
+              >
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currGewogOptions.length > 0 ? (
+                    currGewogOptions.map((option, index) => {
+                      const key = option.gewog_pk_code || option.id || `curr-gewog-${index}`
+                      const value = String(option.gewog_pk_code || option.id || index)
+                      const label = option.gewog || option.name || 'Unknown'
+                      return (
+                        <SelectItem key={key} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    })
+                  ) : (
+                    <SelectItem value="loading" disabled>{data.currDzongkhag ? 'Loading...' : 'Select Dzongkhag first'}</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-currVillage">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-currVillage" className="text-gray-800 font-semibold text-base">
               {data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Village/Street' : 'Street'} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="co-currVillage"
               placeholder={data.currCountry && countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? 'Enter Village/Street' : 'Enter Street'}
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.currVillage || ""}
               onChange={(e) => setData({ ...data, currVillage: e.target.value })}
               disabled={!data.currCountry}
@@ -645,14 +684,15 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="co-currFlat">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-currFlat" className="text-gray-800 font-semibold text-base">
               House/Building/Flat No <span className="text-destructive">*</span>
             </Label>
             <Input
               id="co-currFlat"
               placeholder="Enter Flat No"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) ? '' : data.currFlat || ""}
               onChange={(e) => setData({ ...data, currFlat: e.target.value })}
               disabled={!data.currCountry || !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan'))}
@@ -661,12 +701,12 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
         </div>
 
         {data.currCountry && !countryOptions.find(c => String(c.country_pk_code) === data.currCountry && (c.country || c.name || '').toLowerCase().includes('bhutan')) && (
-          <div className="space-y-2 mt-4">
-            <Label htmlFor="co-currAddressProof">
+          <div className="space-y-2.5 mt-4">
+            <Label htmlFor="co-currAddressProof" className="text-gray-800 font-semibold text-base">
               Upload Address Proof Document <span className="text-destructive">*</span>
             </Label>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" className="w-28 bg-transparent">
+              <Button type="button" variant="outline" size="sm" className="h-12 w-32 rounded-lg bg-white hover:bg-gray-50 border-gray-300 font-medium transition-all">
                 Choose File
               </Button>
               <span className="text-sm text-muted-foreground">No file chosen</span>
@@ -677,101 +717,111 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
       </div>
 
       {/* PEP Declaration */}
-      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-6 shadow-md hover:shadow-lg transition-shadow duration-200">
         <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">PEP Declaration</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="co-pepPerson">Politically Exposed Person*</Label>
-            <Select value={data.pepPerson} onValueChange={(value) => setData({ ...data, pepPerson: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="yes">Yes</SelectItem>
-                <SelectItem value="no">No</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-pepPerson" className="text-gray-800 font-semibold text-base">Politically Exposed Person*</Label>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select value={data.pepPerson} onValueChange={(value) => setData({ ...data, pepPerson: value })}>
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-pepSubCategory">PEP Sub Category*</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="co-pepSubCategory" className="text-gray-800 font-semibold text-base">PEP Sub Category*</Label>
             <Input
               id="co-pepSubCategory"
               placeholder="Enter Sub Category"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.pepPerson === 'yes' ? data.pepSubCategory || "" : ''}
               onChange={(e) => setData({ ...data, pepSubCategory: e.target.value })}
               disabled={data.pepPerson !== 'yes'}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-pepRelated">Is he/she related to any PEP?*</Label>
-            <Select 
-              value={data.pepPerson === 'yes' ? data.pepRelated : ''} 
-              onValueChange={(value) => setData({ ...data, pepRelated: value })}
-              disabled={data.pepPerson !== 'yes'}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="yes">Yes</SelectItem>
-                <SelectItem value="no">No</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-2.5">
+            <Label htmlFor="co-pepRelated" className="text-gray-800 font-semibold text-base">Is he/she related to any PEP?*</Label>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select 
+                value={data.pepPerson === 'yes' ? data.pepRelated : ''} 
+                onValueChange={(value) => setData({ ...data, pepRelated: value })}
+                disabled={data.pepPerson !== 'yes'}
+              >
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="co-pepRelationship">Relationship*</Label>
-            <Select
-              value={data.pepPerson === 'yes' && data.pepRelated === 'yes' ? data.pepRelationship : ''}
-              onValueChange={(value) => setData({ ...data, pepRelationship: value })}
-              disabled={data.pepPerson !== 'yes' || data.pepRelated !== 'yes'}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="[Select]" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="spouse">Spouse</SelectItem>
-                <SelectItem value="parent">Parent</SelectItem>
-                <SelectItem value="sibling">Sibling</SelectItem>
-                <SelectItem value="child">Child</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-pepRelationship" className="text-gray-800 font-semibold text-base">Relationship*</Label>
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select
+                value={data.pepPerson === 'yes' && data.pepRelated === 'yes' ? data.pepRelationship : ''}
+                onValueChange={(value) => setData({ ...data, pepRelationship: value })}
+                disabled={data.pepPerson !== 'yes' || data.pepRelated !== 'yes'}
+              >
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="spouse">Spouse</SelectItem>
+                  <SelectItem value="parent">Parent</SelectItem>
+                  <SelectItem value="sibling">Sibling</SelectItem>
+                  <SelectItem value="child">Child</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-pepIdentification">
+          <div className="space-y-2.5">
+            <Label htmlFor="co-pepIdentification" className="text-gray-800 font-semibold text-base">
               Identification No. <span className="text-destructive">*</span>
             </Label>
             <Input
               id="co-pepIdentification"
               placeholder="Enter Identification No"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.pepPerson === 'yes' && data.pepRelated === 'yes' ? data.pepIdentification || "" : ''}
               onChange={(e) => setData({ ...data, pepIdentification: e.target.value })}
               disabled={data.pepPerson !== 'yes' || data.pepRelated !== 'yes'}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-pepCategory">PEP Category*</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="co-pepCategory" className="text-gray-800 font-semibold text-base">PEP Category*</Label>
             <Input
               id="co-pepCategory"
               placeholder="Enter Category"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.pepPerson === 'yes' && data.pepRelated === 'yes' ? data.pepCategory || "" : ''}
               onChange={(e) => setData({ ...data, pepCategory: e.target.value })}
               disabled={data.pepPerson !== 'yes' || data.pepRelated !== 'yes'}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="co-pepSubCat2">PEP Sub Category*</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="co-pepSubCat2" className="text-gray-800 font-semibold text-base">PEP Sub Category*</Label>
             <Input
               id="co-pepSubCat2"
               placeholder="Enter Sub Category"
+              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={data.pepPerson === 'yes' && data.pepRelated === 'yes' ? data.pepSubCat2 || "" : ''}
               onChange={(e) => setData({ ...data, pepSubCat2: e.target.value })}
               disabled={data.pepPerson !== 'yes' || data.pepRelated !== 'yes'}
@@ -779,8 +829,8 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="co-uploadId">
+        <div className="space-y-2.5">
+          <Label htmlFor="co-uploadId" className="text-gray-800 font-semibold text-base">
             Upload Identification Proof <span className="text-destructive">*</span>
           </Label>
           <div className="flex items-center gap-2">
@@ -788,7 +838,7 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
               type="button" 
               variant="outline" 
               size="sm" 
-              className="w-28 bg-transparent"
+              className="h-12 w-32 rounded-lg bg-white hover:bg-gray-50 border-gray-300 font-medium transition-all"
               disabled={data.pepPerson !== 'yes' || data.pepRelated !== 'yes'}
             >
               Choose File
@@ -799,9 +849,9 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
       </div>
 
       {/* Employment Status */}
-      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-6 shadow-sm">
-        <div className="space-y-4">
-          <Label>Employment Status*</Label>
+      <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+        <div className="space-y-2.5">
+          <Label className="text-gray-800 font-semibold text-base">Employment Status*</Label>
           <RadioGroup
             value={data.employmentStatus}
             onValueChange={(value) => setData({ ...data, employmentStatus: value })}
@@ -831,73 +881,79 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
 
       {/* Employment Details */}
       {data.employmentStatus === "employed" && (
-        <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-8 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-6 shadow-md hover:shadow-lg transition-shadow duration-200">
           <h2 className="text-2xl font-bold text-[#003DA5] border-b border-gray-200 pb-4">Employment Details</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="co-occupation">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-2.5">
+              <Label htmlFor="co-occupation" className="text-gray-800 font-semibold text-base">
                 Occupation <span className="text-destructive">*</span>
               </Label>
-              <Select value={data.occupation} onValueChange={(value) => setData({ ...data, occupation: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="[Select]" />
-                </SelectTrigger>
-                <SelectContent>
-                  {occupationOptions.length > 0 ? (
-                    occupationOptions.map((option, index) => {
-                      const key = option.occ_pk_code || option.id || `occupation-${index}`
-                      const value = String(option.occ_pk_code || option.id || index)
-                      const label = option.occ_name || option.name || 'Unknown'
-                      return (
-                        <SelectItem key={key} value={value}>
-                          {label}
-                        </SelectItem>
-                      )
-                    })
-                  ) : (
-                    <SelectItem value="loading" disabled>Loading...</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+              <div className="w-full h-12" style={{ minHeight: '48px' }}>
+                <Select value={data.occupation} onValueChange={(value) => setData({ ...data, occupation: value })}>
+                  <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    <SelectValue placeholder="[Select]" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {occupationOptions.length > 0 ? (
+                      occupationOptions.map((option, index) => {
+                        const key = option.occ_pk_code || option.id || `occupation-${index}`
+                        const value = String(option.occ_pk_code || option.id || index)
+                        const label = option.occ_name || option.name || 'Unknown'
+                        return (
+                          <SelectItem key={key} value={value}>
+                            {label}
+                          </SelectItem>
+                        )
+                      })
+                    ) : (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="co-organizationName">
+            <div className="space-y-2.5">
+              <Label htmlFor="co-organizationName" className="text-gray-800 font-semibold text-base">
                 Organization Name <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="co-organizationName"
                 placeholder="Enter Organization Name"
+                className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 value={data.organizationName || ""}
                 onChange={(e) => setData({ ...data, organizationName: e.target.value })}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="co-employerType">
+            <div className="space-y-2.5">
+              <Label htmlFor="co-employerType" className="text-gray-800 font-semibold text-base">
                 Type of Employer <span className="text-destructive">*</span>
               </Label>
-              <Select value={data.employerType} onValueChange={(value) => setData({ ...data, employerType: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="[Select]" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="government">Government</SelectItem>
-                  <SelectItem value="private">Private</SelectItem>
-                  <SelectItem value="corporate">Corporate</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="w-full h-12" style={{ minHeight: '48px' }}>
+                <Select value={data.employerType} onValueChange={(value) => setData({ ...data, employerType: value })}>
+                  <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    <SelectValue placeholder="[Select]" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="government">Government</SelectItem>
+                    <SelectItem value="private">Private</SelectItem>
+                    <SelectItem value="corporate">Corporate</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="co-annualSalary">
+            <div className="space-y-2.5">
+              <Label htmlFor="co-annualSalary" className="text-gray-800 font-semibold text-base">
                 Annual Salary Income <span className="text-destructive">*</span>
               </Label>
               <Input
                 type="number"
                 id="co-annualSalary"
                 placeholder="Enter Annual Salary"
+                className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 value={data.annualSalary || ""}
                 onChange={(e) => setData({ ...data, annualSalary: e.target.value })}
               />
@@ -927,142 +983,147 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Personal Information</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="space-y-2.5">
                   <Label>Salutation <span className="text-destructive">*</span></Label>
-                  <Select
-                    value={coBorrower.salutation}
-                    onValueChange={(value) => updateCoBorrower(actualIndex, "salutation", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="[Select]" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mr">Mr.</SelectItem>
-                      <SelectItem value="mrs">Mrs.</SelectItem>
-                      <SelectItem value="ms">Ms.</SelectItem>
-                      <SelectItem value="dr">Dr.</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="w-full h-12" style={{ minHeight: '48px' }}>
+                    <Select
+                      value={coBorrower.salutation}
+                      onValueChange={(value) => updateCoBorrower(actualIndex, "salutation", value)}
+                    >
+                      <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        <SelectValue placeholder="[Select]" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="mr">Mr.</SelectItem>
+                        <SelectItem value="mrs">Mrs.</SelectItem>
+                        <SelectItem value="ms">Ms.</SelectItem>
+                        <SelectItem value="dr">Dr.</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <Label>Co-Borrower Name <span className="text-destructive">*</span></Label>
                   <Input
                     placeholder="Enter Full Name"
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     value={coBorrower.name || ""}
                     onChange={(e) => updateCoBorrower(actualIndex, "name", e.target.value)}
                   />
                 </div>
-
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <Label>Nationality <span className="text-destructive">*</span></Label>
-                  <Select
-                    value={coBorrower.nationality}
-                    onValueChange={(value) => updateCoBorrower(actualIndex, "nationality", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="[Select]" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bhutanese">Bhutanese</SelectItem>
-                      <SelectItem value="indian">Indian</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="w-full h-12" style={{ minHeight: '48px' }}>
+                    <Select
+                      value={coBorrower.nationality}
+                      onValueChange={(value) => updateCoBorrower(actualIndex, "nationality", value)}
+                    >
+                      <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        <SelectValue placeholder="[Select]" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="bhutanese">Bhutanese</SelectItem>
+                        <SelectItem value="indian">Indian</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <Label>Identification Type <span className="text-destructive">*</span></Label>
-                  <Select
-                    value={coBorrower.identificationType}
-                    onValueChange={(value) => updateCoBorrower(actualIndex, "identificationType", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="[Select]" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cid">Citizenship ID</SelectItem>
-                      <SelectItem value="passport">Passport</SelectItem>
-                      <SelectItem value="work_permit">Work Permit</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="w-full h-12" style={{ minHeight: '48px' }}>
+                    <Select
+                      value={coBorrower.identificationType}
+                      onValueChange={(value) => updateCoBorrower(actualIndex, "identificationType", value)}
+                    >
+                      <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        <SelectValue placeholder="[Select]" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cid">Citizenship ID</SelectItem>
+                        <SelectItem value="passport">Passport</SelectItem>
+                        <SelectItem value="work_permit">Work Permit</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="space-y-2.5">
                   <Label>Identification No. <span className="text-destructive">*</span></Label>
                   <Input
                     placeholder="Enter identification No"
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     value={coBorrower.identificationNo || ""}
                     onChange={(e) => updateCoBorrower(actualIndex, "identificationNo", e.target.value)}
                   />
                 </div>
-
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <Label>Date of Birth <span className="text-destructive">*</span></Label>
                   <Input
                     type="date"
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     value={coBorrower.dateOfBirth || ""}
                     onChange={(e) => updateCoBorrower(actualIndex, "dateOfBirth", e.target.value)}
                   />
                 </div>
-
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <Label>Email Address <span className="text-destructive">*</span></Label>
                   <Input
                     type="email"
                     placeholder="Enter Email"
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     value={coBorrower.email || ""}
                     onChange={(e) => updateCoBorrower(actualIndex, "email", e.target.value)}
                   />
                 </div>
-
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <Label>Contact Number <span className="text-destructive">*</span></Label>
                   <Input
                     placeholder="Enter Contact No"
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     value={coBorrower.contact || ""}
                     onChange={(e) => updateCoBorrower(actualIndex, "contact", e.target.value)}
                   />
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="space-y-2.5">
                   <Label>Relationship to Borrower <span className="text-destructive">*</span></Label>
-                  <Select
-                    value={coBorrower.relationship}
-                    onValueChange={(value) => updateCoBorrower(actualIndex, "relationship", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="[Select]" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="spouse">Spouse</SelectItem>
-                      <SelectItem value="parent">Parent</SelectItem>
-                      <SelectItem value="sibling">Sibling</SelectItem>
-                      <SelectItem value="child">Child</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="w-full h-12" style={{ minHeight: '48px' }}>
+                    <Select
+                      value={coBorrower.relationship}
+                      onValueChange={(value) => updateCoBorrower(actualIndex, "relationship", value)}
+                    >
+                      <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        <SelectValue placeholder="[Select]" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="spouse">Spouse</SelectItem>
+                        <SelectItem value="parent">Parent</SelectItem>
+                        <SelectItem value="sibling">Sibling</SelectItem>
+                        <SelectItem value="child">Child</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <Label>Annual Income (Nu.) <span className="text-destructive">*</span></Label>
                   <Input
                     type="number"
                     placeholder="Enter Annual Income"
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     value={coBorrower.annualIncome || ""}
                     onChange={(e) => updateCoBorrower(actualIndex, "annualIncome", e.target.value)}
                   />
                 </div>
-
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <Label>Occupation</Label>
                   <Input
                     placeholder="Enter Occupation"
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     value={coBorrower.occupation || ""}
                     onChange={(e) => updateCoBorrower(actualIndex, "occupation", e.target.value)}
                   />

@@ -857,14 +857,30 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               Upload Address Proof Document <span className="text-red-500">*</span>
             </Label>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" className="w-28 bg-transparent">
+              <input
+                type="file"
+                id="permAddressProof"
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => handleFileChange('permAddressProof', e.target.files?.[0] || null)}
+              />
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                className="w-28 bg-transparent"
+                onClick={() => document.getElementById('permAddressProof')?.click()}
+              >
                 Choose File
               </Button>
               <span className="text-sm text-muted-foreground">
-                {data.permAddressProofFile ? data.permAddressProofFile.name : 'No file chosen'}
+                {data.permAddressProof || 'No file chosen'}
               </span>
             </div>
-            <p className="text-xs text-gray-500">Please upload a valid address proof document for non-Bhutan residence</p>
+            {errors.permAddressProof && (
+              <p className="text-xs text-red-500 mt-1">{errors.permAddressProof}</p>
+            )}
+            <p className="text-xs text-gray-500">Please upload a valid address proof document for non-Bhutan residence. Allowed: PDF, JPG, PNG (Max 5MB)</p>
           </div>
         )}
       </div>
@@ -1084,14 +1100,30 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               Upload Address Proof Document <span className="text-red-500">*</span>
             </Label>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" className="w-28 bg-transparent">
+              <input
+                type="file"
+                id="currAddressProof"
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => handleFileChange('currAddressProof', e.target.files?.[0] || null)}
+              />
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                className="w-28 bg-transparent"
+                onClick={() => document.getElementById('currAddressProof')?.click()}
+              >
                 Choose File
               </Button>
               <span className="text-sm text-muted-foreground">
-                {data.currAddressProofFile ? data.currAddressProofFile.name : 'No file chosen'}
+                {data.currAddressProof || 'No file chosen'}
               </span>
             </div>
-            <p className="text-xs text-gray-500">Please upload a valid address proof document for non-Bhutan residence</p>
+            {errors.currAddressProof && (
+              <p className="text-xs text-red-500 mt-1">{errors.currAddressProof}</p>
+            )}
+            <p className="text-xs text-gray-500">Please upload a valid address proof document for non-Bhutan residence. Allowed: PDF, JPG, PNG (Max 5MB)</p>
           </div>
         )}
 
@@ -1417,7 +1449,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
               </Label>
               <Input
                 id="employeeId"
-                placeholder="Enter CID No"
+                placeholder="Enter ID"
                 className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
                 value={data.employeeId || ""}
                 onChange={(e) => setData({ ...data, employeeId: e.target.value })}
@@ -1429,8 +1461,9 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                 Service Joining Date <span className="text-red-500">*</span>
               </Label>
               <Input
+                type="date"
                 id="joiningDate"
-                placeholder="Enter Contact No"
+                max={today}
                 className="h-12 border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]"
                 value={data.joiningDate || ""}
                 onChange={(e) => setData({ ...data, joiningDate: e.target.value })}
