@@ -36,7 +36,7 @@ const Loading = () => {
   )
 }
 
-export default function LoanApplicationPage() {
+function LoanApplicationContent() {
   const searchParams = useSearchParams()
   const stepParam = searchParams.get('step')
   const [currentStep, setCurrentStep] = useState(stepParam ? parseInt(stepParam) : 0)
@@ -222,8 +222,7 @@ export default function LoanApplicationPage() {
   }
 
   return (
-   <Suspense fallback={<Loading />}> 
-     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-24">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-24">
       <Header />
 
       <div className="container mx-auto px-6 py-10">
@@ -512,6 +511,13 @@ export default function LoanApplicationPage() {
         onProceed={() => setCurrentStep(1)}
       />
     </div>
-   </Suspense>
+  )
+}
+
+export default function LoanApplicationPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <LoanApplicationContent />
+    </Suspense>
   )
 }
