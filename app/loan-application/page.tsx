@@ -16,6 +16,7 @@ import { PersonalDetailsForm } from "@/components/PersonalDetail"
 import { CoBorrowerDetailsForm } from "@/components/CoBorrowerDetail"
 import { SecurityDetailsForm } from "@/components/SecurityDetail"
 import { RepaymentSourceForm } from "@/components/RepaymentSource"
+import { Confirmation } from "@/components/confirmation"
 import { fetchLoanData } from "@/services/api"
 
 const steps = [
@@ -164,6 +165,17 @@ export default function LoanApplicationPage() {
     setCurrentStep(3) // Go back to Security Details step
   }
 
+  const handleConfirmationNext = (data: any) => {
+    setFormData({ ...formData, ...data })
+    // Handle final submission here (e.g., API call)
+    console.log('Final form data:', { ...formData, ...data })
+    alert('Application submitted successfully!')
+  }
+
+  const handleConfirmationBack = () => {
+    setCurrentStep(4) // Go back to Repayment Source step
+  }
+
   const calculateEMI = () => {
     // Return 0 if no loan amount is entered
     if (!totalLoanInput || totalLoanInput === "" || parseFloat(totalLoanInput) <= 0) {
@@ -260,6 +272,14 @@ export default function LoanApplicationPage() {
             <RepaymentSourceForm
               onNext={handleRepaymentSourceNext}
               onBack={handleRepaymentSourceBack}
+              formData={formData}
+            />
+          </div>
+        ) : currentStep === 5 ? (
+          <div className="max-w-7xl mx-auto">
+            <Confirmation
+              onNext={handleConfirmationNext}
+              onBack={handleConfirmationBack}
               formData={formData}
             />
           </div>

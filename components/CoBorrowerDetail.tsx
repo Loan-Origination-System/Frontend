@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { fetchMaritalStatus, fetchNationality, fetchIdentificationType, fetchCountry, fetchDzongkhag, fetchGewogsByDzongkhag, fetchOccupations } from "@/services/api"
+import { fetchMaritalStatus, fetchNationality, fetchIdentificationType, fetchCountry, fetchDzongkhag, fetchGewogsByDzongkhag, fetchOccupations, fetchPepSubCategoryByCategory } from "@/services/api"
 
 interface CoBorrowerDetailsFormProps {
   onNext: (data: any) => void
@@ -27,6 +27,7 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
   const [permGewogOptions, setPermGewogOptions] = useState<any[]>([])
   const [currGewogOptions, setCurrGewogOptions] = useState<any[]>([])
   const [occupationOptions, setOccupationOptions] = useState<any[]>([])
+  const [pepSubCategoryOptions, setPepSubCategoryOptions] = useState<any[]>([])
 
   useEffect(() => {
     // Load all initial API data
@@ -86,6 +87,31 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
     }
     loadCurrGewogs()
   }, [data.currDzongkhag])
+
+  // Load PEP sub-categories when pepPerson is 'yes'
+  useEffect(() => {
+    const loadPepSubCategories = async () => {
+      if (data.pepPerson === 'yes') {
+        try {
+          // Using 14003 as the PEP category code
+          const options = await fetchPepSubCategoryByCategory('14003')
+          setPepSubCategoryOptions(options)
+        } catch (error) {
+          console.error('Failed to load PEP sub-categories:', error)
+          setPepSubCategoryOptions([
+            { id: 'foreign-pep', name: 'Foreign PEP' },
+            { id: 'domestic-pep', name: 'Domestic PEP' },
+            { id: 'international-org', name: 'International Organization PEP' },
+            { id: 'family-member', name: 'Family Member of PEP' },
+            { id: 'close-associate', name: 'Close Associate of PEP' }
+          ])
+        }
+      } else {
+        setPepSubCategoryOptions([])
+      }
+    }
+    loadPepSubCategories()
+  }, [data.pepPerson])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -738,23 +764,42 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
 
           <div className="space-y-2.5">
             <Label htmlFor="co-pepSubCategory" className="text-gray-800 font-semibold text-base">PEP Sub Category*</Label>
-            <Input
-              id="co-pepSubCategory"
-              placeholder="Enter Sub Category"
-              className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              value={data.pepPerson === 'yes' ? data.pepSubCategory || "" : ''}
-              onChange={(e) => setData({ ...data, pepSubCategory: e.target.value })}
-              disabled={data.pepPerson !== 'yes'}
-            />
+            <div className="w-full h-12" style={{ minHeight: '48px' }}>
+              <Select
+                value={data.pepPerson === 'yes' ? data.pepSubCategory : ''}
+                onValueChange={(value) => setData({ ...data, pepSubCategory: value })}
+                disabled={data.pepPerson !== 'yes'}
+              >
+                <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="[Select]" />
+                </SelectTrigger>
+                <SelectContent>
+                  {pepSubCategoryOptions.length > 0 ? (
+                    pepSubCategoryOptions.map((option, index) => {
+                      const key = option.pep_sub_category_pk_code || option.id || option.code || `pep-sub-${index}`
+                      const value = String(option.pep_sub_category_pk_code || option.id || option.code || index)
+                      const label = option.pep_sub_category || option.name || option.label || 'Unknown'
+                      return (
+                        <SelectItem key={key} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    })
+                  ) : (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2.5">
-            <Label htmlFor="co-pepRelated" className="text-gray-800 font-semibold text-base">Is he/she related to any PEP?*</Label>
+            <Label htmlFor="co-pepRelated" className="text-gray-800 font-semibold text-base">Are you related to any PEP?*</Label>
             <div className="w-full h-12" style={{ minHeight: '48px' }}>
               <Select 
-                value={data.pepPerson === 'yes' ? data.pepRelated : ''} 
+                value={data.pepPerson === 'no' ? data.pepRelated : ''} 
                 onValueChange={(value) => setData({ ...data, pepRelated: value })}
-                disabled={data.pepPerson !== 'yes'}
+                disabled={data.pepPerson !== 'no'}
               >
                 <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                   <SelectValue placeholder="[Select]" />
@@ -773,9 +818,9 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
             <Label htmlFor="co-pepRelationship" className="text-gray-800 font-semibold text-base">Relationship*</Label>
             <div className="w-full h-12" style={{ minHeight: '48px' }}>
               <Select
-                value={data.pepPerson === 'yes' && data.pepRelated === 'yes' ? data.pepRelationship : ''}
+                value={data.pepPerson === 'no' && data.pepRelated === 'yes' ? data.pepRelationship : ''}
                 onValueChange={(value) => setData({ ...data, pepRelationship: value })}
-                disabled={data.pepPerson !== 'yes' || data.pepRelated !== 'yes'}
+                disabled={data.pepPerson !== 'no' || data.pepRelated !== 'yes'}
               >
                 <SelectTrigger className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                   <SelectValue placeholder="[Select]" />
@@ -798,9 +843,9 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
               id="co-pepIdentification"
               placeholder="Enter Identification No"
               className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              value={data.pepPerson === 'yes' && data.pepRelated === 'yes' ? data.pepIdentification || "" : ''}
+              value={data.pepPerson === 'no' && data.pepRelated === 'yes' ? data.pepIdentification || "" : ''}
               onChange={(e) => setData({ ...data, pepIdentification: e.target.value })}
-              disabled={data.pepPerson !== 'yes' || data.pepRelated !== 'yes'}
+              disabled={data.pepPerson !== 'no' || data.pepRelated !== 'yes'}
             />
           </div>
 
@@ -810,9 +855,9 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
               id="co-pepCategory"
               placeholder="Enter Category"
               className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              value={data.pepPerson === 'yes' && data.pepRelated === 'yes' ? data.pepCategory || "" : ''}
+              value={data.pepPerson === 'no' && data.pepRelated === 'yes' ? data.pepCategory || "" : ''}
               onChange={(e) => setData({ ...data, pepCategory: e.target.value })}
-              disabled={data.pepPerson !== 'yes' || data.pepRelated !== 'yes'}
+              disabled={data.pepPerson !== 'no' || data.pepRelated !== 'yes'}
             />
           </div>
 
@@ -822,9 +867,9 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
               id="co-pepSubCat2"
               placeholder="Enter Sub Category"
               className="w-full h-12 rounded-lg border border-gray-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              value={data.pepPerson === 'yes' && data.pepRelated === 'yes' ? data.pepSubCat2 || "" : ''}
+              value={data.pepPerson === 'no' && data.pepRelated === 'yes' ? data.pepSubCat2 || "" : ''}
               onChange={(e) => setData({ ...data, pepSubCat2: e.target.value })}
-              disabled={data.pepPerson !== 'yes' || data.pepRelated !== 'yes'}
+              disabled={data.pepPerson !== 'no' || data.pepRelated !== 'yes'}
             />
           </div>
         </div>
@@ -839,11 +884,11 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
               variant="outline" 
               size="sm" 
               className="h-12 w-32 rounded-lg bg-white hover:bg-gray-50 border-gray-300 font-medium transition-all"
-              disabled={data.pepPerson !== 'yes' || data.pepRelated !== 'yes'}
+              disabled={data.pepPerson !== 'no' || data.pepRelated !== 'yes'}
             >
               Choose File
             </Button>
-            <span className="text-sm text-muted-foreground">{data.pepPerson === 'yes' && data.pepRelated === 'yes' ? 'No file chosen' : 'No file chosen'}</span>
+            <span className="text-sm text-muted-foreground">{data.pepPerson === 'no' && data.pepRelated === 'yes' ? 'No file chosen' : 'No file chosen'}</span>
           </div>
         </div>
       </div>
