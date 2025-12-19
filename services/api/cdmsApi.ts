@@ -28,9 +28,11 @@ async function fetchCDMSData(endpoint: string, cacheKey: string) {
     
     const result = await response.json()
     
-    // Handle different response structures
+    // Handle different response structures (including double-nested data.data)
     let data = []
-    if (result && result.data && Array.isArray(result.data)) {
+    if (result && result.data && result.data.data && Array.isArray(result.data.data)) {
+      data = result.data.data
+    } else if (result && result.data && Array.isArray(result.data)) {
       data = result.data
     } else if (result && Array.isArray(result)) {
       data = result

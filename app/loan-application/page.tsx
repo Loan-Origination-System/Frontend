@@ -64,13 +64,15 @@ function LoanApplicationContent() {
       try {
         const result = await fetchLoanData()
         console.log('API Result:', result)
-        console.log('Loan Sectors:', result?.loanSector)
-        if (result && result.loanSector && Array.isArray(result.loanSector)) {
-          setLoanSectorOptions(result.loanSector)
-          console.log('Loan Sector Options Set:', result.loanSector.length, 'sectors')
+        // Handle nested response: result.data.data.loanSector
+        const data = result?.data?.data || result?.data || result
+        console.log('Loan Sectors:', data?.loanSector)
+        if (data && data.loanSector && Array.isArray(data.loanSector)) {
+          setLoanSectorOptions(data.loanSector)
+          console.log('Loan Sector Options Set:', data.loanSector.length, 'sectors')
         }
-        if (result && result.loanType && Array.isArray(result.loanType)) {
-          setLoanTypeOptions(result.loanType)
+        if (data && data.loanType && Array.isArray(data.loanType)) {
+          setLoanTypeOptions(data.loanType)
         }
       } catch (error) {
         console.error('Failed to load loan data:', error)
