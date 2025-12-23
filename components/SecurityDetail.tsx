@@ -17,7 +17,7 @@ interface SecurityDetailsFormProps {
 }
 
 export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetailsFormProps) {
-  const [data, setData] = useState(formData.securityDetails || {})
+  const [data, setData] = useState(formData.securityDetails || formData || {})
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [guarantors, setGuarantors] = useState<any[]>([{ isPep: '', relatedToPep: '' }])
   const [securities, setSecurities] = useState<any[]>([{}])
@@ -80,6 +80,17 @@ export function SecurityDetailsForm({ onNext, onBack, formData }: SecurityDetail
 
     loadAllData()
   }, [])
+
+  // Sync with formData when it changes
+  useEffect(() => {
+    if (formData && Object.keys(formData).length > 0) {
+      setData((prev: any) => ({
+        ...prev,
+        ...formData.securityDetails,
+        ...formData
+      }))
+    }
+  }, [formData])
 
   useEffect(() => {
     const loadPermGewogs = async () => {

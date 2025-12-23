@@ -19,7 +19,7 @@ interface PersonalDetailsFormProps {
 }
 
 export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetailsFormProps) {
-  const [data, setData] = useState(formData.personalDetails || {})
+  const [data, setData] = useState(formData.personalDetails || formData || {})
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showCoBorrowerDialog, setShowCoBorrowerDialog] = useState(false)
   const [maritalStatusOptions, setMaritalStatusOptions] = useState<any[]>([])
@@ -206,6 +206,22 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
     loadPepCategories()
   }, [])
 
+  // Sync with formData when it changes (e.g., from verified customer data)
+  useEffect(() => {
+    if (formData && Object.keys(formData).length > 0) {
+      console.log('PersonalDetail - Received formData:', formData)
+      setData((prev: any) => {
+        const merged = {
+          ...prev,
+          ...formData.personalDetails,
+          ...formData // Also spread root level properties from verified data
+        }
+        console.log('PersonalDetail - Merged data:', merged)
+        return merged
+      })
+    }
+  }, [formData, formData.isVerified, formData.applicantName]) // Add specific fields to trigger updates
+
   // Load permanent gewogs when permanent dzongkhag changes
   useEffect(() => {
     const loadPermGewogs = async () => {
@@ -353,6 +369,9 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
     setShowCoBorrowerDialog(false)
     onNext({ personalDetails: data, hasCoBorrower })
   }
+
+  // Debug: Log data state before rendering
+  console.log('PersonalDetail - Rendering with data:', data)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-10 pt-8 pb-12">

@@ -15,10 +15,10 @@ interface ConfirmationProps {
 
 export function Confirmation({ onNext, onBack, formData }: ConfirmationProps) {
   const router = useRouter()
-  const personalData = formData.personalDetails || {}
-  const coBorrowerData = formData.coBorrowerDetails || {}
-  const securityData = formData.securityDetails || {}
-  const repaymentData = formData.repaymentSource || {}
+  const personalData = formData ? { ...formData, ...formData.personalDetails } : {}
+  const coBorrowerData = formData?.coBorrowerDetails || {}
+  const securityData = formData?.securityDetails || {}
+  const repaymentData = formData?.repaymentSource || {}
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

@@ -142,3 +142,80 @@ export async function fetchPepSubCategoryByCategory(pepCategoryCode: string) {
   return fetchCDMSData(`/pep-sub-category/by/pep-category/${pepCategoryCode}`, cacheKey)
 }
 
+/**
+ * Fetch customer onboarded details (existing user verification)
+ */
+export async function fetchCustomerOnboardedDetails(payload: {
+  type: string;
+  identity_no: string;
+  contact_no: string;
+  email_id: string;
+}) {
+  try {
+    console.log('Sending customer onboarded details request with payload:', payload)
+    
+    // Try to fetch CSRF token first
+    let csrfToken = ''
+    try {
+      const tokenResponse = await fetch(`${API_CONFIG.CDMS_BASE_URL}/csrf-token`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${API_CONFIG.ACCESS_TOKEN}`,
+          'Accept': 'application/json'
+        }
+      })
+      if (tokenResponse.ok) {
+        const tokenData = await tokenResponse.json()
+        csrfToken = tokenData.token || tokenData.csrf_token || tokenData.csrfToken || tokenData.data?.token || ''
+        console.log('CSRF token fetched successfully:', csrfToken ? 'Yes' : 'No')
+      } else {
+        console.log('CSRF token endpoint returned:', tokenResponse.status)
+      }
+    } catch (e) {
+      console.log('CSRF token fetch failed:', e)
+    }
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${API_CONFIG.ACCESS_TOKEN}`,
+      'Accept': 'application/json'
+    }
+    
+    // Add CSRF token to headers if available
+    if (csrfToken) {
+      headers['X-CSRF-TOKEN'] = csrfToken
+    }
+    
+    const response = await fetch(
+      `${API_CONFIG.CDMS_BASE_URL}/customer-onboarded-details`,
+      {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload)
+      }
+    )
+    
+    console.log('Response status:', response.status)
+    const responseText = await response.text()
+    console.log('Response body:', responseText)
+    
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please wait and try again.')
+      }
+      try {
+        const errorData = JSON.parse(responseText)
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+      } catch (parseError) {
+        throw new Error(`HTTP error! status: ${response.status}. Response: ${responseText}`)
+      }
+    }
+    
+    const result = JSON.parse(responseText)
+    return result
+  } catch (error) {
+    console.error('Error fetching customer onboarded details:', error)
+    throw error
+  }
+}
+

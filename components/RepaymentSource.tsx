@@ -16,7 +16,7 @@ interface RepaymentSourceFormProps {
 }
 
 export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourceFormProps) {
-  const [data, setData] = useState(formData.repaymentSource || {})
+  const [data, setData] = useState(formData.repaymentSource || formData || {})
   const [guarantors, setGuarantors] = useState<any[]>([{}])
   const [nationalityOptions, setNationalityOptions] = useState<any[]>([])
   const [identificationTypeOptions, setIdentificationTypeOptions] = useState<any[]>([])
@@ -49,6 +49,17 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
 
     loadAllData()
   }, [])
+
+  // Sync with formData when it changes
+  useEffect(() => {
+    if (formData && Object.keys(formData).length > 0) {
+      setData((prev: any) => ({
+        ...prev,
+        ...formData.repaymentSource,
+        ...formData
+      }))
+    }
+  }, [formData])
 
   useEffect(() => {
     const loadPermGewogs = async () => {

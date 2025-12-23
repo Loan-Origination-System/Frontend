@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import OtpVerify from "@/components/pop-up/otp";
 import { Header } from "./header";
 import { fetchIdentificationType } from "@/services/api";
+import { mapCustomerDataToForm } from "@/lib/mapCustomerData";
 
 export default function ExistingUserVerification() {
+  const router = useRouter();
   const [idType, setIdType] = useState("");
   const [idNumber, setIdNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -13,6 +16,8 @@ export default function ExistingUserVerification() {
   const [contactPreference, setContactPreference] = useState<"email" | "phone" | "">("");
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [identificationTypeOptions, setIdentificationTypeOptions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [customerData, setCustomerData] = useState<any>(null);
 
   useEffect(() => {
     const loadIdentificationType = async () => {
@@ -191,7 +196,7 @@ export default function ExistingUserVerification() {
             {/* Button */}
             <div className="mt-8 flex justify-center">
               <button 
-                onClick={() => {
+                onClick={async () => {
                   if (!idType || !idNumber) {
                     alert('Please fill in Identification Type and Number');
                     return;
@@ -208,11 +213,59 @@ export default function ExistingUserVerification() {
                     alert('Please provide a valid phone number');
                     return;
                   }
-                  setShowOtpModal(true);
+                  
+                  // Call Next.js API proxy to verify customer
+                  setIsLoading(true);
+                  try {
+                    const payload = {
+                      type: "I",
+                      identity_no: idNumber,
+                      contact_no: contactPreference === "phone" ? phone : "",
+                      email_id: contactPreference === "email" ? email : ""
+                    };
+                    
+                    // Call our Next.js API route instead of external API directly
+                    const response = await fetch('/api/customer-onboarded-details', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(payload)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (!response.ok) {
+                      alert(result.error || 'Failed to verify customer');
+                      return;
+                    }
+                    
+                    if (result?.success && result?.data) {
+                      setCustomerData(result.data);
+                      console.log('Customer data:', result.data);
+                      
+                      // Map customer data to form format
+                      const mappedData = mapCustomerDataToForm(result);
+                      console.log('Mapped form data:', mappedData);
+                      
+                      // Store in sessionStorage for form auto-population
+                      sessionStorage.setItem('verifiedCustomerData', JSON.stringify(mappedData));
+                      
+                      setShowOtpModal(true);
+                    } else {
+                      alert('Customer not found or invalid response');
+                    }
+                  } catch (error: any) {
+                    console.error('Error verifying customer:', error);
+                    alert(error.message || 'Failed to verify customer. Please try again.');
+                  } finally {
+                    setIsLoading(false);
+                  }
                 }}
-                className="bg-blue-700 hover:bg-blue-800 transition text-white px-8 py-3 rounded-lg font-medium"
+                disabled={isLoading}
+                className="bg-blue-700 hover:bg-blue-800 transition text-white px-8 py-3 rounded-lg font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                Proceed
+                {isLoading ? 'Verifying...' : 'Proceed'}
               </button>
             </div>
 

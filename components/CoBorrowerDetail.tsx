@@ -17,7 +17,7 @@ interface CoBorrowerDetailsFormProps {
 }
 
 export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDetailsFormProps) {
-  const [data, setData] = useState(formData.coBorrowerDetails || {})
+  const [data, setData] = useState(formData.coBorrowerDetails || formData || {})
   const [coBorrowers, setCoBorrowers] = useState<any[]>(formData.coBorrowers || [{}])
   const [maritalStatusOptions, setMaritalStatusOptions] = useState<any[]>([])
   const [nationalityOptions, setNationalityOptions] = useState<any[]>([])
@@ -76,6 +76,17 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
 
     loadAllData()
   }, [])
+
+  // Sync with formData when it changes (e.g., from verified customer data)
+  useEffect(() => {
+    if (formData && Object.keys(formData).length > 0) {
+      setData((prev: any) => ({
+        ...prev,
+        ...formData.coBorrowerDetails,
+        ...formData
+      }))
+    }
+  }, [formData])
 
   // Load permanent gewogs when permanent dzongkhag changes
   useEffect(() => {
