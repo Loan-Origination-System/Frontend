@@ -9,7 +9,6 @@ async function fetchCDMSData(endpoint: string, cacheKey: string) {
     // Check cache first
     const cachedData = getCachedData(cacheKey)
     if (cachedData) {
-      console.log(`Returning cached ${cacheKey}`)
       return cachedData
     }
     
@@ -52,7 +51,6 @@ async function fetchCDMSData(endpoint: string, cacheKey: string) {
     // Try to return cached data even if expired
     const cachedData = getCachedData(cacheKey)
     if (cachedData) {
-      console.log(`API failed, returning cached ${cacheKey}`)
       return cachedData
     }
     
@@ -152,8 +150,6 @@ export async function fetchCustomerOnboardedDetails(payload: {
   email_id: string;
 }) {
   try {
-    console.log('Sending customer onboarded details request with payload:', payload)
-    
     // Try to fetch CSRF token first
     let csrfToken = ''
     try {
@@ -167,12 +163,9 @@ export async function fetchCustomerOnboardedDetails(payload: {
       if (tokenResponse.ok) {
         const tokenData = await tokenResponse.json()
         csrfToken = tokenData.token || tokenData.csrf_token || tokenData.csrfToken || tokenData.data?.token || ''
-        console.log('CSRF token fetched successfully:', csrfToken ? 'Yes' : 'No')
-      } else {
-        console.log('CSRF token endpoint returned:', tokenResponse.status)
       }
     } catch (e) {
-      console.log('CSRF token fetch failed:', e)
+      // CSRF token fetch failed, continue without it
     }
     
     const headers: Record<string, string> = {
@@ -195,9 +188,7 @@ export async function fetchCustomerOnboardedDetails(payload: {
       }
     )
     
-    console.log('Response status:', response.status)
     const responseText = await response.text()
-    console.log('Response body:', responseText)
     
     if (!response.ok) {
       if (response.status === 429) {

@@ -46,7 +46,27 @@ function LoanApplicationContent() {
   const [tenure, setTenure] = useState([12])
   const [totalLoanInput, setTotalLoanInput] = useState("")
   const [showDocumentPopup, setShowDocumentPopup] = useState(false)
-  const [formData, setFormData] = useState({})
+  const [formData, setFormData] = useState(() => {
+    // Initialize formData with sessionStorage data immediately
+    try {
+      const verifiedDataStr = sessionStorage.getItem('verifiedCustomerData')
+      if (verifiedDataStr) {
+        const verifiedData = JSON.parse(verifiedDataStr)
+        console.log('LoanApplication - Initializing with verified data:', verifiedData)
+        return {
+          ...verifiedData,
+          personalDetails: verifiedData,
+          coBorrowerDetails: verifiedData,
+          securityDetails: verifiedData,
+          repaymentSource: verifiedData
+        }
+      }
+    } catch (error) {
+      console.error('LoanApplication - Failed to initialize with verified data:', error)
+    }
+    console.log('LoanApplication - No verified data found, initializing empty')
+    return {}
+  })
   const [loanSectorOptions, setLoanSectorOptions] = useState<any[]>([])
   const [loanSubSectorOptions, setLoanSubSectorOptions] = useState<any[]>([])
   const [selectedSector, setSelectedSector] = useState("")
@@ -58,18 +78,18 @@ function LoanApplicationContent() {
   const [apiTenure, setApiTenure] = useState<number>(0)
   const [apiInterestRate, setApiInterestRate] = useState<number>(0)
 
+  console.log('LoanApplication - Current formData state:', formData)
+  console.log('LoanApplication - Current step:', currentStep)
+
   useEffect(() => {
     // Load loan data from API
     const loadLoanData = async () => {
       try {
         const result = await fetchLoanData()
-        console.log('API Result:', result)
         // Handle nested response: result.data.data.loanSector
         const data = result?.data?.data || result?.data || result
-        console.log('Loan Sectors:', data?.loanSector)
         if (data && data.loanSector && Array.isArray(data.loanSector)) {
           setLoanSectorOptions(data.loanSector)
-          console.log('Loan Sector Options Set:', data.loanSector.length, 'sectors')
         }
         if (data && data.loanType && Array.isArray(data.loanType)) {
           setLoanTypeOptions(data.loanType)
@@ -87,10 +107,8 @@ function LoanApplicationContent() {
       const sector = loanSectorOptions.find(
         (s) => s.loan_sector_id === parseInt(selectedSector)
       )
-      console.log('Found sector:', sector)
       if (sector && sector.loanSubSector && Array.isArray(sector.loanSubSector)) {
         setLoanSubSectorOptions(sector.loanSubSector)
-        console.log('Sub-sectors loaded:', sector.loanSubSector.length)
       } else {
         setLoanSubSectorOptions([])
       }
@@ -123,7 +141,6 @@ function LoanApplicationContent() {
       if (subSector) {
         const tenure = parseFloat(subSector.loan_tenure || '0')
         const rate = parseFloat(subSector.interest_rate || '0')
-        console.log('Selected SubSector Tenure:', tenure, 'Rate:', rate)
         setApiTenure(tenure)
         setApiInterestRate(rate)
       }
@@ -179,7 +196,6 @@ function LoanApplicationContent() {
   const handleConfirmationNext = (data: any) => {
     setFormData({ ...formData, ...data })
     // Handle final submission here (e.g., API call)
-    console.log('Final form data:', { ...formData, ...data })
     alert('Application submitted successfully!')
   }
 
@@ -309,7 +325,6 @@ function LoanApplicationContent() {
                     Loan Type: <span className="text-red-500">*</span>
                   </Label>
                   <Select value={selectedLoanType} onValueChange={(value) => {
-                    console.log('Loan Type selected:', value)
                     setSelectedLoanType(value)
                   }}>
                     <SelectTrigger id="vehicle-type" className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">
@@ -334,7 +349,6 @@ function LoanApplicationContent() {
                     Loan Sector <span className="text-red-500">*</span>
                   </Label>
                   <Select value={selectedSector} onValueChange={(value) => {
-                    console.log('Sector selected:', value)
                     setSelectedSector(value)
                   }}>
                     <SelectTrigger id="loan-sector" className="h-12 w-full border-gray-300 focus:border-[#FF9800] focus:ring-[#FF9800]">

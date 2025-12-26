@@ -80,11 +80,20 @@ export function CoBorrowerDetailsForm({ onNext, onBack, formData }: CoBorrowerDe
   // Sync with formData when it changes (e.g., from verified customer data)
   useEffect(() => {
     if (formData && Object.keys(formData).length > 0) {
-      setData((prev: any) => ({
-        ...prev,
-        ...formData.coBorrowerDetails,
-        ...formData
-      }))
+      // Check if formData has actual values
+      const hasData = Object.values(formData).some(val => {
+        if (typeof val === 'string') return val.trim() !== '';
+        if (typeof val === 'object' && val !== null) return Object.keys(val).length > 0;
+        return val !== null && val !== undefined;
+      });
+      
+      if (hasData) {
+        setData((prev: any) => ({
+          ...prev,
+          ...formData.coBorrowerDetails,
+          ...formData
+        }))
+      }
     }
   }, [formData])
 

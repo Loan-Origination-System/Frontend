@@ -19,7 +19,14 @@ interface PersonalDetailsFormProps {
 }
 
 export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetailsFormProps) {
-  const [data, setData] = useState(formData.personalDetails || formData || {})
+  console.log('PersonalDetail - Component rendered with formData:', formData)
+  
+  const [data, setData] = useState(() => {
+    // Initialize with formData if available, otherwise empty object
+    const initial = formData?.personalDetails || formData || {}
+    console.log('PersonalDetail - Initial data:', initial)
+    return initial
+  })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showCoBorrowerDialog, setShowCoBorrowerDialog] = useState(false)
   const [maritalStatusOptions, setMaritalStatusOptions] = useState<any[]>([])
@@ -208,19 +215,47 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
 
   // Sync with formData when it changes (e.g., from verified customer data)
   useEffect(() => {
-    if (formData && Object.keys(formData).length > 0) {
-      console.log('PersonalDetail - Received formData:', formData)
-      setData((prev: any) => {
-        const merged = {
-          ...prev,
-          ...formData.personalDetails,
-          ...formData // Also spread root level properties from verified data
+    console.log('PersonalDetail - useEffect triggered with formData:', formData)
+    
+    // Only update if formData has meaningful data
+    if (formData && typeof formData === 'object' && Object.keys(formData).length > 0) {
+      // Check if formData has actual values (not just empty nested objects)
+      const hasData = Object.entries(formData).some(([key, val]) => {
+        // Check the nested personalDetails first
+        if (key === 'personalDetails' && val && typeof val === 'object') {
+          return Object.keys(val).length > 0
         }
-        console.log('PersonalDetail - Merged data:', merged)
-        return merged
+        // Skip other nested form section references
+        if (key === 'coBorrowerDetails' || key === 'securityDetails' || key === 'repaymentSource') {
+          return false
+        }
+        // Check actual field values
+        if (typeof val === 'string') return val.trim() !== ''
+        if (typeof val === 'boolean') return true
+        if (Array.isArray(val)) return val.length > 0
+        return val !== null && val !== undefined
       })
+      
+      console.log('PersonalDetail - hasData:', hasData)
+      
+      if (hasData) {
+        console.log('PersonalDetail - Updating with formData')
+        setData((prev: any) => {
+          const merged = {
+            ...prev,
+            ...(formData.personalDetails || {}),
+            ...formData // Also spread root level properties from verified data
+          }
+          console.log('PersonalDetail - Merged data:', merged)
+          return merged
+        })
+      } else {
+        console.log('PersonalDetail - Skipping - no meaningful data')
+      }
+    } else {
+      console.log('PersonalDetail - Skipping - formData is empty or invalid')
     }
-  }, [formData, formData.isVerified, formData.applicantName]) // Add specific fields to trigger updates
+  }, [formData])
 
   // Load permanent gewogs when permanent dzongkhag changes
   useEffect(() => {
@@ -1476,7 +1511,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
                       const label = option.occ_name || option.occupation || option.name || 'Unknown'
                       
                       return (
-                        <SelectItem key={key} value={value}>
+                        <SelectItem key={key} value={label}>
                           {label}
                         </SelectItem>
                       )

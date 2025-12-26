@@ -53,11 +53,20 @@ export function RepaymentSourceForm({ onNext, onBack, formData }: RepaymentSourc
   // Sync with formData when it changes
   useEffect(() => {
     if (formData && Object.keys(formData).length > 0) {
-      setData((prev: any) => ({
-        ...prev,
-        ...formData.repaymentSource,
-        ...formData
-      }))
+      // Check if formData has actual values
+      const hasData = Object.values(formData).some(val => {
+        if (typeof val === 'string') return val.trim() !== '';
+        if (typeof val === 'object' && val !== null) return Object.keys(val).length > 0;
+        return val !== null && val !== undefined;
+      });
+      
+      if (hasData) {
+        setData((prev: any) => ({
+          ...prev,
+          ...formData.repaymentSource,
+          ...formData
+        }))
+      }
     }
   }, [formData])
 

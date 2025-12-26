@@ -184,36 +184,148 @@ function safeGet(obj: any, path: string): any {
 }
 
 /**
+ * Map text labels to their corresponding codes for dropdown values
+ */
+function mapLabelToCode(label: string, type: string): string {
+  if (!label) return '';
+  
+  const labelLower = label.toLowerCase().trim();
+  
+  // Nationality mappings
+  if (type === 'nationality') {
+    const nationalityMap: Record<string, string> = {
+      'bhutanese': 'bhutanese',
+      'indian': 'indian',
+      'nepali': 'nepali',
+      'bangladeshi': 'bangladeshi',
+    };
+    for (const [key, value] of Object.entries(nationalityMap)) {
+      if (labelLower.includes(key)) {
+        console.log(`Mapped ${type}: "${label}" -> "${value}"`);
+        return value;
+      }
+    }
+  }
+  
+  // Identification Type mappings
+  if (type === 'identificationType') {
+    const idTypeMap: Record<string, string> = {
+      'citizenship identity card': 'cid',
+      'cid': 'cid',
+      'work permit': 'workpermit',
+      'workpermit': 'workpermit',
+      'passport': 'passport',
+    };
+    for (const [key, value] of Object.entries(idTypeMap)) {
+      if (labelLower.includes(key)) {
+        console.log(`Mapped ${type}: "${label}" -> "${value}"`);
+        return value;
+      }
+    }
+  }
+  
+  // Marital Status mappings
+  if (type === 'maritalStatus') {
+    const maritalMap: Record<string, string> = {
+      'single': 'single',
+      'married': 'married',
+      'divorced': 'divorced',
+      'widowed': 'widowed',
+      'separated': 'separated',
+    };
+    for (const [key, value] of Object.entries(maritalMap)) {
+      if (labelLower.includes(key)) {
+        console.log(`Mapped ${type}: "${label}" -> "${value}"`);
+        return value;
+      }
+    }
+  }
+  
+  // Gender mappings
+  if (type === 'gender') {
+    const genderMap: Record<string, string> = {
+      'male': 'male',
+      'female': 'female',
+      'other': 'other',
+    };
+    for (const [key, value] of Object.entries(genderMap)) {
+      if (labelLower.includes(key)) {
+        console.log(`Mapped ${type}: "${label}" -> "${value}"`);
+        return value;
+      }
+    }
+  }
+  
+  // Bank Name mappings
+  if (type === 'bankName') {
+    const bankMap: Record<string, string> = {
+      'bank of bhutan': 'bob',
+      'bob': 'bob',
+      'bhutan national bank': 'bnb',
+      'bnb': 'bnb',
+      'druk pnb': 'dpnb',
+      'dpnb': 'dpnb',
+      't bank': 'tbank',
+      'tbank': 'tbank',
+      'bhutan development bank': 'bdbl',
+      'bdbl': 'bdbl',
+    };
+    for (const [key, value] of Object.entries(bankMap)) {
+      if (labelLower.includes(key)) {
+        console.log(`Mapped ${type}: "${label}" -> "${value}"`);
+        return value;
+      }
+    }
+  }
+  
+  // If no mapping found, return the original label (it might already be a code)
+  console.log(`No mapping for ${type}: "${label}" - using as-is`);
+  return label;
+}
+
+/**
  * Map customer API response to form-compatible data structure
  */
 export function mapCustomerDataToForm(response: CustomerApiResponse): MappedFormData {
+  console.log('mapCustomerDataToForm - Input response:', response);
+  
   // Handle nested data structure (data.data.data)
   const customerData = response?.data?.data || response?.data;
   
+  console.log('mapCustomerDataToForm - Extracted customerData:', customerData);
+  
   if (!customerData) {
-    console.warn('No customer data found in response');
+    console.warn('mapCustomerDataToForm - No customer data found');
     return { isVerified: false, verifiedFields: [] };
   }
 
   const { personal, address, contact, employment, pep } = customerData as any;
+  
+  console.log('mapCustomerDataToForm - Destructured sections:', {
+    personal,
+    address,
+    contact,
+    employment,
+    pep
+  });
   
   const mappedData: MappedFormData = {
     // Personal Information
     fullName: personal?.party_name || '',
     applicantName: personal?.party_name || '', // Form uses applicantName
     dateOfBirth: formatDate(personal?.party_date_of_birth),
-    gender: personal?.party_gender || '',
+    gender: mapLabelToCode(personal?.party_gender || '', 'gender'),
     idNumber: personal?.party_identity_no || '',
     identificationNo: personal?.party_identity_no || '', // Form uses identificationNo
-    idType: personal?.party_identity_type || '',
-    identificationType: personal?.party_identity_type || '', // Form uses identificationType
+    idType: mapLabelToCode(personal?.party_identity_type || '', 'identificationType'),
+    identificationType: mapLabelToCode(personal?.party_identity_type || '', 'identificationType'), // Form uses identificationType
     identityIssuedDate: formatDate(personal?.party_identity_issued_date),
     identificationIssueDate: formatDate(personal?.party_identity_issued_date), // Form uses identificationIssueDate
     identityExpiryDate: formatDate(personal?.party_identity_expiry_date),
     identificationExpiryDate: formatDate(personal?.party_identity_expiry_date), // Form uses identificationExpiryDate
-    maritalStatus: personal?.party_marital_status || '',
-    nationality: personal?.party_nationality || '',
-    bankName: personal?.party_bank_name || '',
+    maritalStatus: mapLabelToCode(personal?.party_marital_status || '', 'maritalStatus'),
+    nationality: mapLabelToCode(personal?.party_nationality || '', 'nationality'),
+    bankName: mapLabelToCode(personal?.party_bank_name || '', 'bankName'),
     bankAccount: personal?.party_bank_account_no || '', // Form uses bankAccount
     bankAccountNo: personal?.party_bank_account_no || '',
     tpnNumber: personal?.party_tpn_number || '',
@@ -294,6 +406,9 @@ export function mapCustomerDataToForm(response: CustomerApiResponse): MappedForm
     const value = mappedData[field as keyof MappedFormData];
     return value !== '' && value !== null && value !== undefined;
   });
+
+  console.log('mapCustomerDataToForm - Final mapped data:', mappedData);
+  console.log('mapCustomerDataToForm - Verified fields:', mappedData.verifiedFields);
 
   return mappedData;
 }

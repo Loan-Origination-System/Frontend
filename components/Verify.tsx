@@ -242,17 +242,23 @@ export default function ExistingUserVerification() {
                     
                     if (result?.success && result?.data) {
                       setCustomerData(result.data);
-                      console.log('Customer data:', result.data);
+                      
+                      console.log('Verify - API Response:', result);
                       
                       // Map customer data to form format
                       const mappedData = mapCustomerDataToForm(result);
-                      console.log('Mapped form data:', mappedData);
+                      
+                      console.log('Verify - Mapped Data:', mappedData);
+                      console.log('Verify - Mapped Data Keys:', Object.keys(mappedData));
                       
                       // Store in sessionStorage for form auto-population
                       sessionStorage.setItem('verifiedCustomerData', JSON.stringify(mappedData));
                       
+                      console.log('Verify - Data stored in sessionStorage');
+                      
                       setShowOtpModal(true);
                     } else {
+                      console.log('Verify - Invalid response:', result);
                       alert('Customer not found or invalid response');
                     }
                   } catch (error: any) {

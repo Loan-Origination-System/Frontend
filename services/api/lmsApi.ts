@@ -13,7 +13,6 @@ export async function fetchLoanData() {
     // Check cache first
     const cachedData = getCachedData(cacheKey)
     if (cachedData) {
-      console.log('Returning cached loan data')
       return cachedData
     }
     
@@ -37,9 +36,6 @@ export async function fetchLoanData() {
     
     const result = await response.json()
     
-    console.log('Loan Data API Response:', result)
-    console.log('Response Status:', response.status)
-    
     // The API returns: { status: 'success', data: { loanType: [], loanSector: [] } }
     if (result && result.data) {
       // Cache successful response
@@ -55,7 +51,6 @@ export async function fetchLoanData() {
     // Try to return cached data even if expired
     const cachedData = getCachedData(cacheKey)
     if (cachedData) {
-      console.log('API failed, returning cached data')
       return cachedData
     }
     
