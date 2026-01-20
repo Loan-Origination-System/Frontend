@@ -18,6 +18,39 @@ export default function ExistingUserVerification() {
   const [identificationTypeOptions, setIdentificationTypeOptions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [customerData, setCustomerData] = useState<any>(null);
+  const [generatedOtp, setGeneratedOtp] = useState<string>("");
+
+  // Function to generate 6-digit OTP
+  const generateOtp = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+
+  // Function to send SMS OTP
+  const sendSmsOtp = async (phoneNumber: string, otp: string) => {
+    try {
+      const response = await fetch('/api/send-sms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: phoneNumber,
+          otp: otp
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send SMS');
+      }
+
+      return result;
+    } catch (error: any) {
+      console.error('Error sending SMS:', error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const loadIdentificationType = async () => {
@@ -256,6 +289,88 @@ export default function ExistingUserVerification() {
                       
                       console.log('Verify - Data stored in sessionStorage');
                       
+                      // If phone is selected, generate and send SMS OTP
+                      if (contactPreference === "phone" && phone) {
+                        try {
+                          const smsResponse = await fetch('/api/send-sms', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              to: phone
+                            })
+                          });
+                          
+                          const smsResult = await smsResponse.json();
+                          
+                          if (smsResult.success && smsResult.otp) {
+                            // Use the OTP returned by the SMS API (ensure 6 digits)
+                            const formattedOtp = String(smsResult.otp).padStart(6, '0');
+                            setGeneratedOtp(formattedOtp);
+                            
+                            console.log('===== SMS OTP SENT =====');
+                            console.log('Phone Number:', phone);
+                            console.log('OTP Received:', smsResult.otp);
+                            console.log('Formatted OTP (6-digit):', formattedOtp);
+                            console.log('========================');
+                            
+                            alert(`OTP has been sent to your phone number: ${phone}\n\nFor testing: ${formattedOtp}`);
+                          } else {
+                            console.warn('⚠️ SMS sent but OTP not in response:', smsResult);
+                            alert('OTP has been sent to your phone number');
+                          }
+                        } catch (smsError: any) {
+                          console.error('Failed to send SMS:', smsError);
+                          
+                          // Provide more specific error message
+                          let errorMsg = 'Failed to send SMS OTP. ';
+                          if (smsError.message.includes('timed out') || smsError.message.includes('connect')) {
+                            errorMsg += 'The SMS service is not reachable. Please check if the service is running or try again later.';
+                          } else {
+                            errorMsg += smsError.message || 'Please try again.';
+                          }
+                          
+                          alert(errorMsg);
+                          
+                          // For testing, allow to proceed without SMS (remove this in production)
+                          const proceedAnyway = confirm('Do you want to proceed without SMS verification? (Testing only)');
+                          if (!proceedAnyway) {
+                            return;
+                          }
+                        }
+                      }
+                      
+                      // If email is selected, generate OTP (email sending can be implemented later)
+                      if (contactPreference === "email" && email) {
+                        const otp = generateOtp();
+                        setGeneratedOtp(otp);
+                        console.log('Generated OTP for email:', otp); // For testing - remove in production
+                        
+                        // Store OTP in cache for email verification by calling our API
+                        // This just stores it without actually sending an email
+                        try {
+                          const response = await fetch('/api/send-sms', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              to: email,
+                              otp: otp
+                            })
+                          });
+                          
+                          if (response.ok) {
+                            console.log('Email OTP cached successfully');
+                          }
+                        } catch (error) {
+                          console.error('Failed to cache email OTP:', error);
+                        }
+                        
+                        alert(`OTP for testing: ${otp}\n(Email sending not yet implemented)`);
+                      }
+                      
                       setShowOtpModal(true);
                     } else {
                       console.log('Verify - Invalid response:', result);
@@ -284,7 +399,12 @@ export default function ExistingUserVerification() {
       {showOtpModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="relative">
-            <OtpVerify onClose={() => setShowOtpModal(false)} />
+            <OtpVerify 
+              onClose={() => setShowOtpModal(false)} 
+              generatedOtp={generatedOtp}
+              contactMethod={contactPreference}
+              contactValue={contactPreference === "phone" ? phone : email}
+            />
           </div>
         </div>
       )}

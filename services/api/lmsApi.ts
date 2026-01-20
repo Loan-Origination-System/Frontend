@@ -23,13 +23,20 @@ export async function fetchLoanData() {
     )
     
     if (!response.ok) {
+      // Log response details for debugging
+      console.error('LMS API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url
+      })
+      
       // Provide specific error messages for different status codes
       if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please wait a moment and try again.')
       } else if (response.status === 401) {
         throw new Error('Authentication failed. Please check your access token.')
       } else if (response.status >= 500) {
-        throw new Error('Server error. Please try again later.')
+        throw new Error(`Server error (${response.status}): ${response.statusText}. The LMS server may be down or experiencing issues.`)
       }
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -47,13 +54,16 @@ export async function fetchLoanData() {
     return { loanType: [], loanSector: [] }
   } catch (error) {
     console.error('Error fetching loan data:', error)
+    console.error('API URL:', `${API_CONFIG.LMS_BASE_URL}/loan-data`)
     
     // Try to return cached data even if expired
     const cachedData = getCachedData(cacheKey)
     if (cachedData) {
+      console.warn('Returning cached data due to API error')
       return cachedData
     }
     
+    console.warn('No cached data available, returning empty data')
     return { loanType: [], loanSector: [] }
     
   }

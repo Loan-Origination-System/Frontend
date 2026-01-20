@@ -5,13 +5,59 @@ import { useRouter } from "next/navigation";
 
 interface OtpVerifyProps {
   onClose: () => void;
+  generatedOtp?: string;
+  contactMethod?: "email" | "phone" | "";
+  contactValue?: string;
 }
 
-export default function OtpVerify({ onClose }: OtpVerifyProps) {
+export default function OtpVerify({ onClose, generatedOtp = "", contactMethod = "", contactValue = "" }: OtpVerifyProps) {
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [isVerified, setIsVerified] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+    if (isVerified) {
+      // Navigate to loan application page at Personal Details step after animation completes (2 seconds)
+      const timer = setTimeout(() => {
+        router.push("/loan-application?step=1");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isVerified, router]);
+
+  const verifyOtp = async (enteredOtp: string) => {
+    try {
+      // Call API to verify OTP
+      const response = await fetch('/api/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneOrEmail: contactValue,
+          otp: enteredOtp
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setIsVerified(true);
+        setErrorMessage("");
+        return true;
+      } else {
+        setErrorMessage(result.error || "Invalid OTP. Please try again.");
+        return false;
+      }
+    } catch (error: any) {
+      console.error('Error verifying OTP:', error);
+      setErrorMessage("Failed to verify OTP. Please try again.");
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (isVerified) {
@@ -40,9 +86,10 @@ export default function OtpVerify({ onClose }: OtpVerifyProps) {
     if (value && index === 5) {
       const allFilled = newOtp.every((digit) => digit !== "");
       if (allFilled) {
-        // Trigger verification animation after a short delay
-        setTimeout(() => {
-          setIsVerified(true);
+        // Trigger verification after a short delay
+        setTimeout(async () => {
+          const enteredOtp = newOtp.join("");
+          await verifyOtp(enteredOtp);
         }, 300);
       }
     }
@@ -75,8 +122,9 @@ export default function OtpVerify({ onClose }: OtpVerifyProps) {
       // Check if all 6 digits are filled after paste
       const allFilled = newOtp.every((digit) => digit !== "");
       if (allFilled) {
-        setTimeout(() => {
-          setIsVerified(true);
+        setTimeout(async () => {
+          const enteredOtp = newOtp.join("");
+          await verifyOtp(enteredOtp);
         }, 300);
       }
     }
@@ -111,8 +159,19 @@ export default function OtpVerify({ onClose }: OtpVerifyProps) {
             Verify Your Identity
           </h2>
           <p className="text-sm text-gray-600 mb-6">
-            We've sent a 6-digit code to <span className="font-semibold">lungten@gmail.com</span>
+            We've sent a 6-digit code to <span className="font-semibold">
+              {contactValue || "your registered contact"}
+            </span>
+            {contactMethod === "phone" && " via SMS"}
+            {contactMethod === "email" && " via Email"}
           </p>
+
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{errorMessage}</p>
+            </div>
+          )}
 
           {/* OTP Input Boxes */}
           <div className="flex justify-center gap-3 mb-6">
@@ -144,13 +203,13 @@ export default function OtpVerify({ onClose }: OtpVerifyProps) {
 
           {/* Verify Button */}
           <button
-            onClick={() => {
+            onClick={async () => {
               const otpValue = otp.join("");
               if (otpValue.length === 6) {
                 console.log("OTP Entered:", otpValue);
-                setIsVerified(true);
+                await verifyOtp(otpValue);
               } else {
-                alert("Please enter all 6 digits");
+                setErrorMessage("Please enter all 6 digits");
               }
             }}
             className="w-full max-w-xs bg-blue-700 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition"
