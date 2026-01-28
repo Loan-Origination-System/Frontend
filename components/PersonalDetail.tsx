@@ -221,6 +221,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
     if (formData && typeof formData === 'object' && Object.keys(formData).length > 0) {
       // Check if formData has actual values (not just empty nested objects)
       const hasData = Object.entries(formData).some(([key, val]) => {
+        console.log(`PersonalDetail - Checking key: ${key}, value:`, val)
         // Check the nested personalDetails first
         if (key === 'personalDetails' && val && typeof val === 'object') {
           return Object.keys(val).length > 0
@@ -256,6 +257,7 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
       console.log('PersonalDetail - Skipping - formData is empty or invalid')
     }
   }, [formData])
+console.log('PersonalDetail - Data state after useEffect:', formData)
 
   // Load permanent gewogs when permanent dzongkhag changes
   useEffect(() => {
@@ -272,6 +274,8 @@ export function PersonalDetailsForm({ onNext, onBack, formData }: PersonalDetail
     }
     loadPermGewogs()
   }, [data.permDzongkhag])
+
+  
 
   // Load current gewogs when current dzongkhag changes
   useEffect(() => {
